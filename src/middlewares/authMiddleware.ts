@@ -12,7 +12,7 @@ interface CustomRequest extends Request {
 
 export const authMiddleware = () => {
 	return (req: CustomRequest, res: Response, next: NextFunction) => {
-		if (req.path === "/login") {
+		if (req.path === "/login-with-token") {
 			const token = req.headers.authorization?.split(" ")[1];
 			if (!token) return res.status(401).json({ message: "No token provided" });
 
