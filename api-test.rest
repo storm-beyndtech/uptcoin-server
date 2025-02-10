@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:5000/api
+@token = http://localhost:5000/api
+
+POST {{baseUrl}}/auth/registration-code
+Content-Type: application/json
+
+{
+  "email": "beyndtech@gmail.com"
+}
+
+###
+
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+# Authorization: Bearer <your-token>
+
+{
+  "email": "beyndtech@gmail.com",
+  "password": "justtesting",
+  "code": "164746",
+  "referral": ""
+}
+
+###
+
