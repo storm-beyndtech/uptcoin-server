@@ -1,7 +1,7 @@
 import { emailTemplate } from "./emailTemplate";
 import { transporter } from "./emailConfig";
 
-const sendMail = (mailData:any) => {
+const sendMail = (mailData: any) => {
 	return new Promise((resolve, reject) => {
 		transporter.sendMail(mailData, (err, info) => {
 			if (err) {
@@ -27,7 +27,7 @@ const sendMailWithRetry = async (mailData: any, retries = 3) => {
 };
 
 // Welcome Mail
-export async function welcomeMail(userEmail:string, token:string) {
+export async function welcomeMail(userEmail: string, token: string) {
 	const verificationLink = `https://uptcoin.com/verify-email/${token}`;
 	try {
 		let bodyContent = `
@@ -42,7 +42,7 @@ export async function welcomeMail(userEmail:string, token:string) {
     `;
 
 		let mailOptions = {
-			from: `Uptcoin <support@prowealth-inc.com>`,
+			from: `Uptcoin <support@uptcoin.com>`,
 			to: userEmail,
 			subject: "Welcome to Uptcoin!",
 			html: emailTemplate("Welcome to Uptcoin", bodyContent),
@@ -55,7 +55,7 @@ export async function welcomeMail(userEmail:string, token:string) {
 }
 
 // Password Reset Mail
-export async function passwordResetMail(userEmail:string, resetToken:string) {
+export async function passwordResetMail(userEmail: string, resetToken: string) {
 	const resetLink = `https://uptcoin.com/reset-password/${resetToken}`;
 	try {
 		let bodyContent = `
@@ -67,7 +67,7 @@ export async function passwordResetMail(userEmail:string, resetToken:string) {
     `;
 
 		let mailOptions = {
-			from: `Uptcoin <support@prowealth-inc.com>`,
+			from: `Uptcoin <support@uptcoin.com>`,
 			to: userEmail,
 			subject: "Password Reset Request",
 			html: emailTemplate("Password Reset", bodyContent),
@@ -80,7 +80,7 @@ export async function passwordResetMail(userEmail:string, resetToken:string) {
 }
 
 // Verification Code Mail
-export async function verificationCodeMail(userEmail:string, verificationCode:string) {
+export async function verificationCodeMail(userEmail: string, verificationCode: string) {
 	try {
 		let bodyContent = `
       <td style="padding: 20px; line-height: 1.8;">
@@ -92,10 +92,63 @@ export async function verificationCodeMail(userEmail:string, verificationCode:st
     `;
 
 		let mailOptions = {
-			from: `Uptcoin <support@prowealth-inc.com>`,
+			from: `Uptcoin <support@uptcoin.com>`,
 			to: userEmail,
 			subject: "Your Uptcoin Verification Code",
 			html: emailTemplate("Verification Code", bodyContent),
+		};
+
+		return await sendMailWithRetry(mailOptions);
+	} catch (error) {
+		return { error: error instanceof Error && error.message };
+	}
+}
+
+// Admin Transaction Approval Mail
+export async function adminTransactionAlert(userEmail: string, amount: number, currency: string) {
+	try {
+		let bodyContent = `
+      <td style="padding: 20px; line-height: 1.8;">
+        <p>A new transaction requires approval.</p>
+        <p>User Email: ${userEmail}</p>
+        <p>Amount: ${amount} ${currency}</p>
+        <p>Please review and approve or reject the transaction.</p>
+      </td>
+    `;
+
+		let mailOptions = {
+			from: `Uptcoin <support@uptcoin.com>`,
+			to: "support@uptcoin.com",
+			subject: "Transaction Approval Required",
+			html: emailTemplate("Transaction Approval Alert", bodyContent),
+		};
+
+		return await sendMailWithRetry(mailOptions);
+	} catch (error) {
+		return { error: error instanceof Error && error.message };
+	}
+}
+
+// Transaction Status Update Mail
+export async function transactionStatusMail(
+	userEmail: string,
+	type: string,
+	amount: number,
+	currency: string,
+	status: string,
+) {
+	try {
+		let bodyContent = `
+      <td style="padding: 20px; line-height: 1.8;">
+        <p>Your ${type} of <b>${amount} ${currency}</b> has been ${status}.</p>
+      </td>
+    `;
+
+		let mailOptions = {
+			from: `Uptcoin <support@uptcoin.com>`,
+			to: userEmail,
+			subject: `${type} ${status}`,
+			html: emailTemplate(`${type} ${status}`, bodyContent),
 		};
 
 		return await sendMailWithRetry(mailOptions);

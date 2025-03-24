@@ -8,11 +8,11 @@ export interface IUser extends Document, UserType {
 
 // Default assets with zero balances
 const defaultAssets = [
-	{ symbol: "BTC", funding: 0, spot: 0, name: "Bitcoin", address: "", network: "" },
-	{ symbol: "ETH", funding: 0, spot: 0, name: "Ethereum", address: "", network: "" },
-	{ symbol: "USDT", funding: 0, spot: 0, name: "Tether", address: "", network: "" },
-	{ symbol: "ATOM", funding: 0, spot: 0, name: "Cosmos", address: "", network: "" },
-	{ symbol: "SOL", funding: 0, spot: 0, name: "Solana", address: "", network: "" },
+	{ symbol: "BTC", funding: 0, spot: 0, staking: 0, name: "Bitcoin", address: "", network: "BTC" },
+	{ symbol: "ETH", funding: 0, spot: 0, staking: 0, name: "Ethereum", address: "", network: "ERC20" },
+	{ symbol: "USDT", funding: 0, spot: 0, staking: 0, name: "Tether", address: "", network: "ERC20" },
+	{ symbol: "ATOM", funding: 0, spot: 0, staking: 0, name: "Cosmos", address: "", network: "ATOM" },
+	{ symbol: "SOL", funding: 0, spot: 0, staking: 0, name: "Solana", address: "", network: "SOL" },
 ];
 
 // Create the Mongoose Schema
@@ -42,6 +42,7 @@ const UserSchema = new Schema<IUser>(
 					symbol: { type: String },
 					funding: { type: Number },
 					spot: { type: Number },
+					staking: { type: Number },
 					name: { type: String },
 					address: { type: String },
 					network: { type: String },

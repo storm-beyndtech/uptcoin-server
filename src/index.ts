@@ -9,6 +9,8 @@ import authRoutes from "./routes/authRoutes";
 // Middlewares
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { verifyTransporter } from "./services/emailConfig";
+import { startCryptoWebSocket, handleCryptoWebSocket } from "./services/cryptoService";
+import { loadPendingOrders } from "./services/tradeEngine";
 
 // Initialize Express App
 const app = express();
@@ -23,6 +25,16 @@ app.use(express.json());
 	try {
 		await mongoose.connect(process.env.MONGODB_URL || "");
 		console.log("Connected to MongoDB...");
+
+		// Start CryptoCompare WebSocket
+		startCryptoWebSocket();
+
+		// WebSocket for frontend clients
+		handleCryptoWebSocket(server);
+
+		//Fetch all pending trades
+		// A store in memory
+		loadPendingOrders();
 	} catch (error) {
 		if (error instanceof Error) {
 			console.error("Error Connecting to MongoDB:", error.message);
@@ -32,20 +44,18 @@ app.use(express.json());
 })();
 
 // Verify Email Transporter
-(async () => {
-    await verifyTransporter();
-})();
+verifyTransporter();
 
 // Define Routes
 app.get("/", (req, res) => {
-  res.send("Storm's Server🔥");
+	res.send("Storm's Server🔥");
 });
 
 app.use("/api/auth", authMiddleware(), authRoutes);
 
 // Route Not Found Handler
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
+	res.status(404).json({ message: "Route not found" });
 });
 
 // Start the Server

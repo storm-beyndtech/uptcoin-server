@@ -26,12 +26,12 @@ export const userValidationSchema = z.object({
 				symbol: z.string(),
 				funding: z.number(),
 				spot: z.number(),
+				staking: z.number(),
 				name: z.string(),
 				address: z.string(),
 				network: z.string(),
 			}),
-		)
-		.optional(),
+		),
 
 	disabled: z.boolean().default(false),
 });

@@ -93,7 +93,11 @@ export const login = async (req: Request, res: Response) => {
 			user,
 		});
 	} catch (error) {
-		res.status(500).json({ message: "Login failed" });
+    if (error instanceof Error) {
+			res.status(500).json({ message: `Login failed: ${error.message}` });
+		} else {
+			console.log(error);
+		}
 	}
 };
 

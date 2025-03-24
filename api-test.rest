@@ -1,6 +1,7 @@
 @baseUrl = http://localhost:5000/api
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2N2E4ZWUxN2Q0ZGJhYmI5ZTcxMDNjYWEiLCJpYXQiOjE3MzkxMjQyNDgsImV4cCI6MTczOTIxMDY0OH0.ysM2puEuaHvRniu1tknQUSOypSdZO7l2cTTz8nbJjHU
 
+### **1️⃣ Register an Account**
 POST {{baseUrl}}/auth/registration-code
 Content-Type: application/json
 
@@ -8,16 +9,131 @@ Content-Type: application/json
   "email": "beyndtech@gmail.com"
 }
 
-###
-
+### **2️⃣ Login and Get JWT Token**
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
-Authorization: Bearer {{token}}
 
 {
   "email": "beyndtech@gmail.com",
   "password": "justtesting"
 }
 
-###
+### **3️⃣ User Profile**
+GET {{baseUrl}}/auth/users/67a8ee17d4dbabb9e7103caa
 
+### **4️⃣ Deposit Routes**
+#### ➕ Create Deposit
+POST {{baseUrl}}/deposit
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "67a8ee17d4dbabb9e7103caa",
+  "amount": 1000,
+  "currency": "USDT",
+  "status": "pending"
+}
+
+#### 📜 Get All Deposits
+GET {{baseUrl}}/deposits
+Authorization: Bearer {{token}}
+
+#### 🔍 Get Single Deposit by ID (Replace `DEPOSIT_ID`)
+GET {{baseUrl}}/deposit/DEPOSIT_ID
+Authorization: Bearer {{token}}
+
+#### ✅ Approve Deposit
+PUT {{baseUrl}}/deposit/approve
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "depositId": "DEPOSIT_ID"
+}
+
+#### ❌ Reject Deposit
+PUT {{baseUrl}}/deposit/reject
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "depositId": "DEPOSIT_ID"
+}
+
+### **5️⃣ Withdrawal Routes**
+#### ➖ Create Withdrawal
+POST {{baseUrl}}/withdraw
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "67a8ee17d4dbabb9e7103caa",
+  "amount": 500,
+  "currency": "BTC",
+  "status": "pending"
+}
+
+#### 📜 Get All Withdrawals
+GET {{baseUrl}}/withdrawals
+Authorization: Bearer {{token}}
+
+#### 🔍 Get Single Withdrawal by ID (Replace `WITHDRAWAL_ID`)
+GET {{baseUrl}}/withdrawal/WITHDRAWAL_ID
+Authorization: Bearer {{token}}
+
+#### ✅ Approve Withdrawal
+PUT {{baseUrl}}/withdrawal/approve
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "withdrawalId": "WITHDRAWAL_ID"
+}
+
+#### ❌ Reject Withdrawal
+PUT {{baseUrl}}/withdrawal/reject
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "withdrawalId": "WITHDRAWAL_ID"
+}
+
+### **6️⃣ Transfer Asset**
+POST {{baseUrl}}/transfer
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "fromUserId": "67a8ee17d4dbabb9e7103caa",
+  "toUserId": "67a8ee17d4dbabb9e7103cab",
+  "amount": 200,
+  "currency": "ETH"
+}
+
+### **7️⃣ Convert Asset**
+POST {{baseUrl}}/convert
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "67a8ee17d4dbabb9e7103caa",
+  "fromCurrency": "BTC",
+  "toCurrency": "USDT",
+  "amount": 0.005
+}
+
+### **8️⃣ Place a Trade**
+POST {{baseUrl}}/trade
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "67a8ee17d4dbabb9e7103caa",
+  "amount": 500,
+  "currency": "USDT",
+  "status": "pending",
+  "exchangeRate": 1.2,
+  "from": "spot",
+  "to": "spot"
+}
