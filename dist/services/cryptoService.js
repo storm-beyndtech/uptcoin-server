@@ -55,12 +55,15 @@ const startCryptoWebSocket = async () => {
                         low: 0,
                         high: 0,
                         volume: 0,
+                        time: Date.now(),
                         image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL.toLowerCase()}@2x.png`,
                     };
                 }
                 // Update only the available fields
-                if (PRICE)
+                if (PRICE) {
                     coinCache[FROMSYMBOL].price = PRICE;
+                    coinCache[FROMSYMBOL].time = Date.now();
+                }
                 if (OPEN24HOUR && OPEN24HOUR !== 0 && PRICE) {
                     coinCache[FROMSYMBOL].change = ((PRICE - OPEN24HOUR) / OPEN24HOUR) * 100;
                 }
