@@ -6,6 +6,7 @@ import http from "http";
 import cors from "cors";
 // Routes
 import authRoutes from "./routes/authRoutes";
+import transactionRoutes from "./routes/transactionRoutes";
 // Middlewares
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { verifyTransporter } from "./services/emailConfig";
@@ -33,7 +34,6 @@ app.use(express.json());
 		handleCryptoWebSocket(server);
 
 		//Fetch all pending trades
-		// A store in memory
 		loadPendingOrders();
 	} catch (error) {
 		if (error instanceof Error) {
@@ -52,6 +52,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authMiddleware(), authRoutes);
+app.use("/api/transaction", transactionRoutes);
 
 // Route Not Found Handler
 app.use((req, res) => {

@@ -3,7 +3,6 @@ import { Schema, model, Document } from 'mongoose';
 export interface ICoin extends Document {
     symbol: string;
     margin: number;
-    charges: number;
     name: string;
     address: string;
     network: string;
@@ -12,13 +11,13 @@ export interface ICoin extends Document {
     withdraw: boolean;
     minWithdraw: number;
     minDeposit: number;
+    withdrawalFee: number;
     conversionFee: number;
-}
+  }
 
 const CoinSchema = new Schema<ICoin>({
     symbol: { type: String, required: true },
     margin: { type: Number, required: true },
-    charges: { type: Number, required: true },
     name: { type: String, required: true },
     address: { type: String, required: true },
     network: { type: String, required: true },
@@ -26,6 +25,7 @@ const CoinSchema = new Schema<ICoin>({
     deposit: { type: Boolean, required: true },
     withdraw: { type: Boolean, required: true },
     minWithdraw: { type: Number, required: true },
+    withdrawalFee: { type: Number, required: true },
     minDeposit: { type: Number, required: true },
     conversionFee: { type: Number, required: true },
 });

@@ -4,7 +4,7 @@ import User from "../../models/userModel";
 interface TransferRequestBody {
 	userId: string;
 	amount: number;
-	currency: string;
+	symbol: string;
 	from: "spot" | "funding";
 	to: "spot" | "funding";
 }
@@ -12,15 +12,17 @@ interface TransferRequestBody {
 // Transfer assets between Spot and Funding
 export const transferAsset = async (req: Request, res: Response) => {
 	try {
-		const { userId, amount, currency, from, to } = req.body as TransferRequestBody;
+		const { userId, amount, symbol, from, to } = req.body as TransferRequestBody;
 
 		//Some Validation
 		if (from !== "spot" && from !== "funding") {
 			return res.status(400).json({ message: "Invalid source wallet" });
-		}
+    }
+    
 		if (to !== "spot" && to !== "funding") {
 			return res.status(400).json({ message: "Invalid destination wallet" });
-		}
+    }
+    
 		if (from === to) {
 			return res.status(400).json({ message: "Source and destination wallets cannot be the same" });
 		}
@@ -31,7 +33,7 @@ export const transferAsset = async (req: Request, res: Response) => {
 		if (!user.assets) return res.status(400).json({ message: "User assets not found" });
 
 		//Check for asset specific ass and sufficient balance
-		const asset = user.assets.find((asset) => asset.symbol === currency);
+		const asset = user.assets.find((asset) => asset.symbol === symbol);
 		if (!asset) return res.status(400).json({ message: "Asset not found" });
 		if (asset[from] < amount) {
 			return res.status(400).json({ message: "Insufficient balance" });
@@ -46,7 +48,7 @@ export const transferAsset = async (req: Request, res: Response) => {
 				},
 			},
 			{
-				arrayFilters: [{ "elem.symbol": currency }],
+				arrayFilters: [{ "elem.symbol": symbol }],
 				new: true,
 			},
 		);
