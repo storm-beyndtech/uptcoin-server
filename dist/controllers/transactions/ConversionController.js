@@ -4,39 +4,78 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.convertAsset = void 0;
+const mongoose_1 = require("mongoose");
 const userModel_1 = __importDefault(require("../../models/userModel"));
-// Convert assets from one currency to another within the user's account
+const coinModel_1 = require("../../models/coinModel");
+const cryptoService_1 = require("../../services/cryptoService");
+const Conversion_1 = __importDefault(require("../../models/transactions/Conversion"));
 const convertAsset = async (req, res) => {
     try {
-        const { userId, amount, fromCurrency, toCurrency, conversionRate } = req.body;
+        const { userId, amount, from, to } = req.body;
+        // Validate user existence
         const user = await userModel_1.default.findById(userId);
         if (!user)
             return res.status(404).json({ message: "User not found" });
         if (!user.assets)
             return res.status(400).json({ message: "User assets not found" });
-        const fromAsset = user.assets.find((asset) => asset.symbol === fromCurrency);
-        const toAsset = user.assets.find((asset) => asset.symbol === toCurrency);
+        // Validate source and destination assets
+        const fromAsset = user.assets.find((asset) => asset.symbol === from);
+        const toAsset = user.assets.find((asset) => asset.symbol === to);
         if (!fromAsset)
             return res.status(400).json({ message: "Source asset not found" });
         if (!toAsset)
             return res.status(400).json({ message: "Destination asset not found" });
-        if (fromAsset.spot < amount) {
+        if (fromAsset.spot < amount)
             return res.status(400).json({ message: "Insufficient balance" });
+        // Get real-time prices from coinCache
+        const fromPrice = from === "USDT" ? 1 : cryptoService_1.coinCache[from].price;
+        const toPrice = to === "USDT" ? 1 : cryptoService_1.coinCache[to].price;
+        if (!fromPrice || !toPrice) {
+            return res.status(400).json({ message: "Real-time price data not available" });
         }
-        const convertedAmount = amount * conversionRate;
-        await userModel_1.default.findByIdAndUpdate(userId, {
+        // Fetch conversion fee from the database
+        const coinData = await coinModel_1.Coin.findOne({ symbol: from }, { fee: 1 });
+        const feePercentage = coinData?.conversionFee || 0;
+        // Calculate the fee and adjusted amount
+        const feeAmount = (amount * feePercentage) / 100;
+        const netAmount = amount - feeAmount;
+        // Handle price conversion
+        let convertedAmount;
+        if (from === "USDT") {
+            // Convert directly using the `to` price if `from` is USDT
+            convertedAmount = netAmount / toPrice;
+        }
+        else {
+            // Convert using (fromAmount * fromPrice) / toPrice
+            convertedAmount = (netAmount * fromPrice) / toPrice;
+        }
+        // Update user assets
+        const updatedUser = await userModel_1.default.findByIdAndUpdate(userId, {
             $inc: {
                 "assets.$[fromElem].spot": -amount,
                 "assets.$[toElem].spot": convertedAmount,
             },
         }, {
-            arrayFilters: [{ "fromElem.symbol": fromCurrency }, { "toElem.symbol": toCurrency }],
+            arrayFilters: [{ "fromElem.symbol": from }, { "toElem.symbol": to }],
             new: true,
         });
-        res.status(200).json({ message: "Conversion successful", convertedAmount });
+        // Log the conversion in the Conversion collection
+        await Conversion_1.default.create({
+            userId: new mongoose_1.Types.ObjectId(userId),
+            fee: feeAmount,
+            from: { symbol: from, amount, price: fromPrice },
+            to: { symbol: to, amount: convertedAmount, price: toPrice },
+        });
+        return res.status(200).json({
+            message: "Conversion successful",
+            convertedAmount,
+            fee: feeAmount,
+            updatedAssets: updatedUser?.assets,
+        });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        console.error("Conversion error:", error);
+        return res.status(500).json({ message: "Server error", error });
     }
 };
 exports.convertAsset = convertAsset;

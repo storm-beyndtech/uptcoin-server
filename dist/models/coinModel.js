@@ -5,7 +5,6 @@ const mongoose_1 = require("mongoose");
 const CoinSchema = new mongoose_1.Schema({
     symbol: { type: String, required: true },
     margin: { type: Number, required: true },
-    charges: { type: Number, required: true },
     name: { type: String, required: true },
     address: { type: String, required: true },
     network: { type: String, required: true },
@@ -13,6 +12,7 @@ const CoinSchema = new mongoose_1.Schema({
     deposit: { type: Boolean, required: true },
     withdraw: { type: Boolean, required: true },
     minWithdraw: { type: Number, required: true },
+    withdrawalFee: { type: Number, required: true },
     minDeposit: { type: Number, required: true },
     conversionFee: { type: Number, required: true },
 });

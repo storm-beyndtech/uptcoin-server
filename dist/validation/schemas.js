@@ -14,6 +14,7 @@ exports.userValidationSchema = zod_1.z.object({
     documentBack: zod_1.z.string().optional(),
     email: zod_1.z.string().email(),
     password: zod_1.z.string().min(6, "Password must be at least 6 characters"),
+    withdrawalPassword: zod_1.z.string().min(6, "Password must be at least 6 characters"),
     referral: zod_1.z.string().optional(),
     isEmailVerified: zod_1.z.boolean().default(false),
     tradingStatus: zod_1.z.string().optional(),

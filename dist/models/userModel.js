@@ -21,6 +21,7 @@ const UserSchema = new mongoose_1.Schema({
     documentBack: { type: String },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    withdrawalPassword: { type: String },
     referral: { type: String },
     isEmailVerified: { type: Boolean, default: false },
     tradingStatus: { type: String, default: "None" },

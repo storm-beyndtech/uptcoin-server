@@ -4,7 +4,7 @@ const mongoose_1 = require("mongoose");
 const DepositSchema = new mongoose_1.Schema({
     userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
     amount: { type: Number, required: true },
-    currency: { type: String, required: true },
+    symbol: { type: String, required: true },
     status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
     address: { type: String, required: true },
     network: { type: String, required: true },

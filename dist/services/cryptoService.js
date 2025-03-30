@@ -3,19 +3,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleCryptoWebSocket = exports.startCryptoWebSocket = void 0;
+exports.handleCryptoWebSocket = exports.startCryptoWebSocket = exports.coinCache = void 0;
 const ws_1 = __importDefault(require("ws"));
 const coinModel_1 = require("../models/coinModel");
 const tradeEngine_1 = require("./tradeEngine");
 const CRYPTOCOMPARE_WS_URL = `wss://streamer.cryptocompare.com/v2?api_key=${process.env.CRYPTOCOMPARE_API_KEY}`;
 const clients = new Set();
 let ws;
-const coinCache = {};
+exports.coinCache = {};
 const startCryptoWebSocket = async () => {
     try {
         // Fetch available coins from the database
         const coins = await coinModel_1.Coin.find({});
-        const subscribedCoins = coins.map((coin) => coin.symbol);
+        const subscribedCoins = coins.map(({ symbol, margin, address, network, withdrawalFee, conversionFee }) => {
+            return {
+                symbol,
+                margin,
+                address,
+                network,
+                withdrawalFee,
+                conversionFee,
+            };
+        });
         if (subscribedCoins.length === 0)
             return console.error("No coins available in the database.");
         ws = new ws_1.default(CRYPTOCOMPARE_WS_URL);
@@ -24,7 +33,7 @@ const startCryptoWebSocket = async () => {
             console.log("Connected to CryptoCompare WebSocket");
             const subRequest = {
                 action: "SubAdd",
-                subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin}~USDT`),
+                subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin.symbol}~USDT`),
             };
             ws.send(JSON.stringify(subRequest));
         });
@@ -33,20 +42,21 @@ const startCryptoWebSocket = async () => {
             try {
                 const parsedData = JSON.parse(data.toString());
                 // Extract relevant fields
-                const { TYPE, FROMSYMBOL, PRICE, OPEN24HOUR, LOW24HOUR, HIGH24HOUR, VOLUME24HOUR } = parsedData;
+                const { TYPE, FROMSYMBOL, PRICE, OPEN24HOUR, LOW24HOUR, HIGH24HOUR, VOLUME24HOURTO } = parsedData;
                 // Filter out irrelevant messages
                 if (TYPE !== "5")
                     return;
                 // Check if the coin is valid and avoid sending 0 values
-                if (!FROMSYMBOL || (!PRICE && !coinCache[FROMSYMBOL]))
+                if (!FROMSYMBOL || (!PRICE && !exports.coinCache[FROMSYMBOL]))
                     return;
+                // console.log(parsedData);
                 // Find the corresponding coin details
                 const coinInfo = coins.find((coin) => coin.symbol === FROMSYMBOL);
                 const coinName = coinInfo ? coinInfo.name : FROMSYMBOL;
                 const coinID = coinInfo ? coinInfo._id : FROMSYMBOL;
                 // Initialize cache if not already set
-                if (!coinCache[FROMSYMBOL]) {
-                    coinCache[FROMSYMBOL] = {
+                if (!exports.coinCache[FROMSYMBOL]) {
+                    exports.coinCache[FROMSYMBOL] = {
                         id: coinID,
                         name: coinName,
                         symbol: FROMSYMBOL,
@@ -56,28 +66,34 @@ const startCryptoWebSocket = async () => {
                         high: 0,
                         volume: 0,
                         time: Date.now(),
-                        image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL.toLowerCase()}@2x.png`,
+                        image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL === "USDT" ? "tether2" : FROMSYMBOL.toLowerCase()}@2x.png`,
+                        address: coinInfo ? coinInfo.address : "",
+                        network: coinInfo ? coinInfo.network : "",
+                        withdrawalFee: coinInfo ? coinInfo.withdrawalFee : "",
+                        conversionFee: coinInfo ? coinInfo.conversionFee : "",
+                        minDeposit: coinInfo ? coinInfo.minDeposit : "",
+                        minWithdraw: coinInfo ? coinInfo.minWithdraw : "",
                     };
                 }
                 // Update only the available fields
                 if (PRICE) {
-                    coinCache[FROMSYMBOL].price = PRICE;
-                    coinCache[FROMSYMBOL].time = Date.now();
+                    exports.coinCache[FROMSYMBOL].price = coinInfo ? PRICE * (1 + coinInfo.margin / 100) : PRICE;
+                    exports.coinCache[FROMSYMBOL].time = Date.now();
                 }
                 if (OPEN24HOUR && OPEN24HOUR !== 0 && PRICE) {
-                    coinCache[FROMSYMBOL].change = ((PRICE - OPEN24HOUR) / OPEN24HOUR) * 100;
+                    exports.coinCache[FROMSYMBOL].change = ((PRICE - OPEN24HOUR) / OPEN24HOUR) * 100;
                 }
                 if (LOW24HOUR)
-                    coinCache[FROMSYMBOL].low = LOW24HOUR;
+                    exports.coinCache[FROMSYMBOL].low = LOW24HOUR;
                 if (HIGH24HOUR)
-                    coinCache[FROMSYMBOL].high = HIGH24HOUR;
-                if (VOLUME24HOUR)
-                    coinCache[FROMSYMBOL].volume = VOLUME24HOUR;
+                    exports.coinCache[FROMSYMBOL].high = HIGH24HOUR;
+                if (VOLUME24HOURTO)
+                    exports.coinCache[FROMSYMBOL].volume = VOLUME24HOURTO;
                 (0, tradeEngine_1.handlePriceUpdate)({ symbol: FROMSYMBOL, price: PRICE });
                 // Broadcast update to all connected clients
                 clients.forEach((client) => {
                     if (client.readyState === ws_1.default.OPEN) {
-                        client.send(JSON.stringify(coinCache[FROMSYMBOL]));
+                        client.send(JSON.stringify(exports.coinCache[FROMSYMBOL]));
                     }
                 });
             }
@@ -87,7 +103,7 @@ const startCryptoWebSocket = async () => {
         });
         ws.on("close", (code, reason) => {
             console.log(`CryptoCompare WebSocket closed: Code ${code}, Reason: ${reason}`);
-            setTimeout(exports.startCryptoWebSocket, 5000);
+            setTimeout(exports.startCryptoWebSocket, 10000);
         });
         ws.on("error", (error) => {
             console.error("CryptoCompare WebSocket error:", error);

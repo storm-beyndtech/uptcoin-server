@@ -11,11 +11,14 @@ const http_1 = __importDefault(require("http"));
 const cors_1 = __importDefault(require("cors"));
 // Routes
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
+const transactionRoutes_1 = __importDefault(require("./routes/transactionRoutes"));
+const coinRoutes_1 = __importDefault(require("./routes/coinRoutes"));
 // Middlewares
 const authMiddleware_1 = require("./middlewares/authMiddleware");
 const emailConfig_1 = require("./services/emailConfig");
 const cryptoService_1 = require("./services/cryptoService");
 const tradeEngine_1 = require("./services/tradeEngine");
+// import { seedDatabase } from "./scripts/seedDatabase";
 // Initialize Express App
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
@@ -32,7 +35,6 @@ app.use(express_1.default.json());
         // WebSocket for frontend clients
         (0, cryptoService_1.handleCryptoWebSocket)(server);
         //Fetch all pending trades
-        // A store in memory
         (0, tradeEngine_1.loadPendingOrders)();
     }
     catch (error) {
@@ -49,6 +51,8 @@ app.get("/", (req, res) => {
     res.send("Storm's Server🔥");
 });
 app.use("/api/auth", (0, authMiddleware_1.authMiddleware)(), authRoutes_1.default);
+app.use("/api/transaction", transactionRoutes_1.default);
+app.use("/api/coins", coinRoutes_1.default);
 // Route Not Found Handler
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });

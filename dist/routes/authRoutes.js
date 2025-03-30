@@ -2,11 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const auth_1 = require("../controllers/auth");
+const PasswordControllers_1 = require("../controllers/PasswordControllers");
 const router = (0, express_1.Router)();
+router.get("/users/:id", auth_1.getUser);
+router.get("/check-withdrawal-password/:userId", PasswordControllers_1.checkWithdrawalPassword);
 router.post("/registration-code", auth_1.requestVerificationCode);
 router.post("/register", auth_1.register);
 router.post("/login", auth_1.login);
-router.post("/reset-password-code", auth_1.requestResetCode);
-router.post("/reset-password", auth_1.resetPassword);
-router.get("/users/:id", auth_1.getUser);
+router.post("/reset-password-code", PasswordControllers_1.requestResetCode);
+router.put("/reset-password", PasswordControllers_1.resetPassword);
+router.put("/update-account-password", PasswordControllers_1.updateAccountPassword);
+router.put("/set-withdrawal-password", PasswordControllers_1.setWithdrawalPassword);
 exports.default = router;

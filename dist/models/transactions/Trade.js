@@ -6,8 +6,9 @@ const TradeSchema = new mongoose_1.Schema({
     action: { type: String, enum: ["buy", "sell"], required: true },
     orderType: { type: String, enum: ["market", "limit"], required: true },
     symbol: { type: String, required: true },
-    price: { type: Number },
+    amount: { type: Number, required: true },
     limitPrice: { type: Number },
+    marketPrice: { type: Number },
     quantity: { type: Number, required: true },
     status: { type: String, enum: ["pending", "executed", "canceled", "rejected"], default: "pending" },
 }, { timestamps: true });

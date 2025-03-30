@@ -3,65 +3,67 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.executeTrade = exports.loadPendingOrders = exports.handlePriceUpdate = void 0;
+exports.executeTrade = exports.loadPendingOrders = exports.handlePriceUpdate = exports.pendingLimitOrders = void 0;
 const Trade_1 = __importDefault(require("../models/transactions/Trade"));
 const userModel_1 = __importDefault(require("../models/userModel"));
-const pendingLimitOrders = new Map();
-//Handle Price Update
+exports.pendingLimitOrders = new Map();
+// Handle Price Update
 const handlePriceUpdate = async (priceData) => {
     const { symbol, price } = priceData;
-    if (pendingLimitOrders.has(symbol)) {
-        let orders = pendingLimitOrders.get(symbol);
+    if (exports.pendingLimitOrders.has(symbol)) {
+        let orders = exports.pendingLimitOrders.get(symbol);
         for (let i = 0; i < orders.length; i++) {
             const order = orders[i];
             if ((order.action === "buy" && price <= order.limitPrice) ||
                 (order.action === "sell" && price >= order.limitPrice)) {
                 console.log(`Executing ${order.action} order for ${order.userId} at ${price}`);
-                await Trade_1.default.findByIdAndUpdate(order._id, {
-                    status: "executed",
-                    limitPrice: price,
-                });
-                orders.splice(i, 1);
-                i--;
+                // Execute trade
+                const success = await (0, exports.executeTrade)(order);
+                if (success) {
+                    // Remove from pending orders list
+                    orders.splice(i, 1);
+                    i--; // Adjust index since we removed an element
+                }
             }
         }
+        // If no more pending orders for this symbol, remove from map
         if (orders.length === 0) {
-            pendingLimitOrders.delete(symbol);
+            exports.pendingLimitOrders.delete(symbol);
         }
     }
 };
 exports.handlePriceUpdate = handlePriceUpdate;
-//Load Pending Limit Orders
+// Load Pending Limit Orders
 const loadPendingOrders = async () => {
     const pendingOrders = await Trade_1.default.find({ status: "pending" });
     pendingOrders.forEach((order) => {
-        if (!pendingLimitOrders.has(order.symbol)) {
-            pendingLimitOrders.set(order.symbol, []);
+        if (!exports.pendingLimitOrders.has(order.symbol)) {
+            exports.pendingLimitOrders.set(order.symbol, []);
         }
-        pendingLimitOrders.get(order.symbol).push(order);
+        exports.pendingLimitOrders.get(order.symbol).push(order);
     });
-    console.log("Loaded Limits.", pendingLimitOrders, pendingOrders);
+    console.log("Loaded Limit Orders:", exports.pendingLimitOrders);
 };
 exports.loadPendingOrders = loadPendingOrders;
-//Execute Limit Trades
+// Execute Trade
 const executeTrade = async (trade) => {
     try {
         // Fetch user from database
         const user = await userModel_1.default.findById(trade.userId);
         if (!user)
             throw new Error("User not found");
-        // Find user's USDT balance And Trade Asset
+        // Find user's USDT balance and trade asset
         const usdtBalance = user.assets.find((asset) => asset.symbol === "USDT");
         const tradeAsset = user.assets.find((asset) => asset.symbol === trade.symbol);
         // Ensure assets exist
         if (!usdtBalance || !tradeAsset)
             throw new Error("Asset balances not found");
         // Handle Buy Order
-        if (trade.orderType === "buy") {
-            const cost = trade.price * trade.quantity;
+        if (trade.action === "buy") {
+            const cost = trade.limitPrice * trade.quantity;
             // Check if user has enough USDT
             if (usdtBalance.spot < cost) {
-                console.log(`Insufficient USDT balance for user ${trade.userId}`);
+                console.warn(`Insufficient USDT balance for user: ${trade.userId}`);
                 return false;
             }
             // Deduct USDT and add purchased asset
@@ -69,15 +71,15 @@ const executeTrade = async (trade) => {
             tradeAsset.spot += trade.quantity;
         }
         // Handle Sell Order
-        if (trade.orderType === "sell") {
+        if (trade.action === "sell") {
             // Check if user has enough of the asset
             if (tradeAsset.spot < trade.quantity) {
-                console.log(`Insufficient ${tradeAsset.symbol} balance for user ${trade.userId}`);
+                console.warn(`Insufficient ${tradeAsset.symbol} balance for user: ${trade.userId}`);
                 return false;
             }
             // Deduct asset and credit USDT
             tradeAsset.spot -= trade.quantity;
-            usdtBalance.spot += trade.price * trade.quantity;
+            usdtBalance.spot += trade.limitPrice * trade.quantity;
         }
         // Save updated user data to database
         await user.save();

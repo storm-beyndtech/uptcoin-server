@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.requestResetCode = exports.login = exports.register = exports.requestVerificationCode = exports.getUser = void 0;
+exports.login = exports.register = exports.requestVerificationCode = exports.getUser = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const codeService_1 = require("../services/codeService");
@@ -98,39 +98,3 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
-// Step 1: Request Password Reset Code
-const requestResetCode = async (req, res) => {
-    const { email } = req.body;
-    try {
-        const user = await userModel_1.default.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-        const { code } = await codeSchema_1.default.create({ email });
-        if (!code)
-            return res.status(500).json({ message: "error generating code" });
-        await (0, emailService_1.passwordResetMail)(email, code);
-        res.status(200).json({ message: "Password reset code sent successfully" });
-    }
-    catch (error) {
-        res.status(500).json({ message: "Error sending reset code" });
-    }
-};
-exports.requestResetCode = requestResetCode;
-// Step 2: Reset Password
-const resetPassword = async (req, res) => {
-    const { email, newPassword, code } = req.body;
-    try {
-        const isValid = await (0, codeService_1.validateCode)(email, code);
-        if (!isValid) {
-            return res.status(400).json({ message: "Invalid or expired reset code" });
-        }
-        const hashedPassword = await bcryptjs_1.default.hash(newPassword, 10);
-        await userModel_1.default.updateOne({ email }, { password: hashedPassword });
-        res.status(200).json({ message: "Password reset successfully" });
-    }
-    catch (error) {
-        res.status(500).json({ message: "Password reset failed" });
-    }
-};
-exports.resetPassword = resetPassword;

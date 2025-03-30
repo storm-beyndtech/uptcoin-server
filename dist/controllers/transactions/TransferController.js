@@ -8,7 +8,7 @@ const userModel_1 = __importDefault(require("../../models/userModel"));
 // Transfer assets between Spot and Funding
 const transferAsset = async (req, res) => {
     try {
-        const { userId, amount, currency, from, to } = req.body;
+        const { userId, amount, symbol, from, to } = req.body;
         //Some Validation
         if (from !== "spot" && from !== "funding") {
             return res.status(400).json({ message: "Invalid source wallet" });
@@ -26,7 +26,7 @@ const transferAsset = async (req, res) => {
         if (!user.assets)
             return res.status(400).json({ message: "User assets not found" });
         //Check for asset specific ass and sufficient balance
-        const asset = user.assets.find((asset) => asset.symbol === currency);
+        const asset = user.assets.find((asset) => asset.symbol === symbol);
         if (!asset)
             return res.status(400).json({ message: "Asset not found" });
         if (asset[from] < amount) {
@@ -38,7 +38,7 @@ const transferAsset = async (req, res) => {
                 [`assets.$[elem].${to}`]: amount,
             },
         }, {
-            arrayFilters: [{ "elem.symbol": currency }],
+            arrayFilters: [{ "elem.symbol": symbol }],
             new: true,
         });
         res.status(200).json({ message: "Transfer successful" });
