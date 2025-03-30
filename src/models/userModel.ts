@@ -28,7 +28,8 @@ const UserSchema = new Schema<IUser>(
 		documentBack: { type: String },
 
 		email: { type: String, required: true, unique: true },
-		password: { type: String, required: true },
+    password: { type: String, required: true },
+    withdrawalPassword: {type: String},
 		referral: { type: String },
 		isEmailVerified: { type: Boolean, default: false },
 

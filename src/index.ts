@@ -7,11 +7,13 @@ import cors from "cors";
 // Routes
 import authRoutes from "./routes/authRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
+import coinRoutes from "./routes/coinRoutes";
 // Middlewares
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { verifyTransporter } from "./services/emailConfig";
 import { startCryptoWebSocket, handleCryptoWebSocket } from "./services/cryptoService";
 import { loadPendingOrders } from "./services/tradeEngine";
+// import { seedDatabase } from "./scripts/seedDatabase";
 
 // Initialize Express App
 const app = express();
@@ -53,6 +55,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authMiddleware(), authRoutes);
 app.use("/api/transaction", transactionRoutes);
+app.use("/api/coins", coinRoutes);
 
 // Route Not Found Handler
 app.use((req, res) => {

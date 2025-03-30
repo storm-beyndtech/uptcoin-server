@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import { Server } from "http";
 import { Coin } from "../models/coinModel";
 import { handlePriceUpdate } from "./tradeEngine";
+import { symbol } from "zod";
 
 const CRYPTOCOMPARE_WS_URL = `wss://streamer.cryptocompare.com/v2?api_key=${process.env.CRYPTOCOMPARE_API_KEY}`;
 const clients = new Set<WebSocket>();
@@ -13,7 +14,18 @@ export const startCryptoWebSocket = async () => {
 	try {
 		// Fetch available coins from the database
 		const coins = await Coin.find({});
-		const subscribedCoins = coins.map((coin) => coin.symbol);
+		const subscribedCoins = coins.map(
+			({ symbol, margin, address, network, withdrawalFee, conversionFee }) => {
+				return {
+					symbol,
+					margin,
+					address,
+					network,
+					withdrawalFee,
+					conversionFee,
+				};
+			},
+		);
 
 		if (subscribedCoins.length === 0) return console.error("No coins available in the database.");
 
@@ -24,7 +36,7 @@ export const startCryptoWebSocket = async () => {
 			console.log("Connected to CryptoCompare WebSocket");
 			const subRequest = {
 				action: "SubAdd",
-				subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin}~USDT`),
+				subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin.symbol}~USDT`),
 			};
 			ws.send(JSON.stringify(subRequest));
 		});
@@ -63,12 +75,18 @@ export const startCryptoWebSocket = async () => {
 						image: `https://assets.coincap.io/assets/icons/${
 							FROMSYMBOL === "USDT" ? "tether2" : FROMSYMBOL.toLowerCase()
 						}@2x.png`,
+						address: coinInfo ? coinInfo.address : "",
+						network: coinInfo ? coinInfo.network : "",
+						withdrawalFee: coinInfo ? coinInfo.withdrawalFee : "",
+						conversionFee: coinInfo ? coinInfo.conversionFee : "",
+						minDeposit: coinInfo ? coinInfo.minDeposit : "",
+						minWithdraw: coinInfo ? coinInfo.minWithdraw : "",
 					};
 				}
 
 				// Update only the available fields
 				if (PRICE) {
-					coinCache[FROMSYMBOL].price = PRICE;
+					coinCache[FROMSYMBOL].price = coinInfo ? PRICE * (1 + coinInfo.margin / 100) : PRICE;
 					coinCache[FROMSYMBOL].time = Date.now();
 				}
 				if (OPEN24HOUR && OPEN24HOUR !== 0 && PRICE) {
@@ -93,7 +111,7 @@ export const startCryptoWebSocket = async () => {
 
 		ws.on("close", (code, reason) => {
 			console.log(`CryptoCompare WebSocket closed: Code ${code}, Reason: ${reason}`);
-			setTimeout(startCryptoWebSocket, 5000);
+			setTimeout(startCryptoWebSocket, 10000);
 		});
 
 		ws.on("error", (error) => {

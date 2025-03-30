@@ -13,6 +13,7 @@ export const userValidationSchema = z.object({
 
 	email: z.string().email(),
 	password: z.string().min(6, "Password must be at least 6 characters"),
+	withdrawalPassword: z.string().min(6, "Password must be at least 6 characters"),
 	referral: z.string().optional(),
 	isEmailVerified: z.boolean().default(false),
 

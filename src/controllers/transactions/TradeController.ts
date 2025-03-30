@@ -1,32 +1,115 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import Trade from "../../models/transactions/Trade";
-import { executeTrade } from "../../services/tradeEngine";
+import { executeTrade, pendingLimitOrders } from "../../services/tradeEngine";
+import User from "../../models/userModel";
+import { coinCache } from "../../services/cryptoService";
 
-// Place a trade (Buy/Sell)
+//Handle Buy/Sell
 export const placeTrade = async (req: Request, res: Response) => {
 	try {
-		const { userId, orderType, action, symbol, limitPrice, price, quantity } = req.body;
+		const { userId, orderType, action, symbol, limitPrice, amount, quantity } = req.body;
 
+		// Validate required fields
 		if (!userId || !orderType || !symbol || !action) {
 			return res.status(400).json({ message: "Missing required fields" });
 		}
 
-		let total = 0;
-		if (orderType === "limit") {
+		// Validate action type
+		if (!["buy", "sell"].includes(action)) {
+			return res.status(400).json({ message: "Invalid action. Must be 'buy' or 'sell'" });
 		}
 
-		const newTrade = new Trade({
-			userId,
+		// Validate order type
+		if (!["market", "limit"].includes(orderType)) {
+			return res.status(400).json({ message: "Invalid order type. Must be 'market' or 'limit'" });
+		}
+
+		// Validate user existence
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: "User not found" });
+		if (!user.assets) return res.status(400).json({ message: "User assets not found" });
+
+		// Fetch real-time price for the asset
+		const assetData = coinCache[symbol];
+		if (!assetData) {
+			return res.status(400).json({ message: "Real-time price data not available for the asset" });
+		}
+
+		const marketPrice = assetData.price;
+
+		// Determine if the user has sufficient balance/assets
+		const baseAsset = action === "buy" ? "USDT" : symbol;
+		const userAsset = user.assets.find((asset) => asset.symbol === baseAsset);
+
+		if (!userAsset) {
+			return res.status(400).json({ message: `User does not own ${baseAsset}` });
+		}
+
+		// Calculate required amount based on market price if not provided
+		const tradeAmount = amount ?? quantity * marketPrice;
+
+		if (action === "buy" && userAsset.spot < tradeAmount) {
+			return res.status(400).json({ message: "Insufficient USDT balance for this trade" });
+		}
+
+		if (action === "sell" && userAsset.spot < quantity) {
+			return res.status(400).json({ message: `Insufficient ${symbol} balance for this trade` });
+		}
+
+		// Create trade object
+		let newTrade = new Trade({
+			userId: new Types.ObjectId(userId),
+			action,
 			orderType,
 			symbol,
-			price: price || null,
-			limitPrice: limitPrice || null,
+			limitPrice,
+			amount: tradeAmount,
 			quantity,
 			status: "pending",
 		});
 
+		// Handle market order execution instantly
+		if (orderType === "market") {
+			newTrade.marketPrice = marketPrice;
+			newTrade.status = "executed";
+
+			// Update user's assets accordingly
+			if (action === "buy") {
+				await User.findByIdAndUpdate(
+					userId,
+					{
+						$inc: {
+							"assets.$[usdtElem].spot": -tradeAmount,
+							"assets.$[symbolElem].spot": quantity,
+						},
+					},
+					{
+						arrayFilters: [{ "usdtElem.symbol": "USDT" }, { "symbolElem.symbol": symbol }],
+					},
+				);
+			} else {
+				await User.findByIdAndUpdate(
+					userId,
+					{
+						$inc: {
+							"assets.$[symbolElem].spot": -quantity,
+							"assets.$[usdtElem].spot": tradeAmount,
+						},
+					},
+					{
+						arrayFilters: [{ "symbolElem.symbol": symbol }, { "usdtElem.symbol": "USDT" }],
+					},
+				);
+			}
+    } else if (orderType === "trade") {
+      if (!pendingLimitOrders.has(symbol)) pendingLimitOrders.set(symbol, []);
+      pendingLimitOrders.get(symbol).push(newTrade);
+    }
+
+		// Save trade
 		await newTrade.save();
+
 		res.status(201).json({ message: "Trade placed successfully", trade: newTrade });
 	} catch (error) {
 		console.error("Error placing trade:", error);
@@ -34,9 +117,11 @@ export const placeTrade = async (req: Request, res: Response) => {
 	}
 };
 
+
+
 // Execute a trade (Manual/Admin trigger)
 export const executeTradeController = async (req: Request, res: Response) => {
-  const { tradeId } = req.params;
+	const { tradeId } = req.params;
 
 	try {
 		const trade = await Trade.findById(tradeId);
