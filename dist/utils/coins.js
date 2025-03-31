@@ -786,18 +786,4 @@ exports.coinArray = [
         withdrawalFee: 0.0002,
         conversionFee: 0,
     },
-    {
-        symbol: "USDT",
-        margin: 0,
-        name: "Tether",
-        address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-        network: "Ethereum (ERC20)",
-        transfer: true,
-        deposit: true,
-        withdraw: true,
-        minWithdraw: 10,
-        minDeposit: 5,
-        withdrawalFee: 0.0001,
-        conversionFee: 0,
-    },
 ];

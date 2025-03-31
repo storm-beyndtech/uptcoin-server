@@ -54,11 +54,33 @@ export const startCryptoWebSocket = async () => {
 
 				// Check if the coin is valid and avoid sending 0 values
 				if (!FROMSYMBOL || (!PRICE && !coinCache[FROMSYMBOL])) return;
-				// console.log(parsedData);
 				// Find the corresponding coin details
 				const coinInfo = coins.find((coin) => coin.symbol === FROMSYMBOL);
 				const coinName = coinInfo ? coinInfo.name : FROMSYMBOL;
 				const coinID = coinInfo ? coinInfo._id : FROMSYMBOL;
+
+				//Initialize USDT first
+				if (!coinCache["USDT"]) {
+					const usdt = coins.find((coin) => coin.symbol === "USDT");
+					coinCache["USDT"] = {
+						id: usdt ? usdt._id : "tether",
+						name: "Tether",
+						symbol: "USDT",
+						price: 1.0,
+						change: 0,
+						low: 1.0,
+						high: 1.0,
+						volume: 0,
+						time: Date.now(),
+						image: "https://assets.coincap.io/assets/icons/tether2@2x.png",
+						address: usdt ? usdt.address : "",
+						network: "Ethereum (ERC20)",
+						withdrawalFee: usdt ? usdt.withdrawalFee : 0,
+						conversionFee: usdt ? usdt.conversionFee : 0,
+						minDeposit: usdt ? usdt.minDeposit : 0,
+						minWithdraw: usdt ? usdt.minWithdraw : 0,
+					};
+				}
 
 				// Initialize cache if not already set
 				if (!coinCache[FROMSYMBOL]) {
@@ -72,9 +94,7 @@ export const startCryptoWebSocket = async () => {
 						high: 0,
 						volume: 0,
 						time: Date.now(),
-						image: `https://assets.coincap.io/assets/icons/${
-							FROMSYMBOL === "USDT" ? "tether2" : FROMSYMBOL.toLowerCase()
-						}@2x.png`,
+						image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL.toLowerCase()}@2x.png`,
 						address: coinInfo ? coinInfo.address : "",
 						network: coinInfo ? coinInfo.network : "",
 						withdrawalFee: coinInfo ? coinInfo.withdrawalFee : "",
@@ -96,12 +116,20 @@ export const startCryptoWebSocket = async () => {
 				if (HIGH24HOUR) coinCache[FROMSYMBOL].high = HIGH24HOUR;
 				if (VOLUME24HOURTO) coinCache[FROMSYMBOL].volume = VOLUME24HOURTO;
 
+				// console.log(coinCache)
+
 				handlePriceUpdate({ symbol: FROMSYMBOL, price: PRICE });
 
 				// Broadcast update to all connected clients
 				clients.forEach((client) => {
 					if (client.readyState === WebSocket.OPEN) {
+						// Send the received coin update first
 						client.send(JSON.stringify(coinCache[FROMSYMBOL]));
+
+						// Also send USDT separately
+						if (coinCache["USDT"]) {
+							client.send(JSON.stringify(coinCache["USDT"]));
+						}
 					}
 				});
 			} catch (error) {
