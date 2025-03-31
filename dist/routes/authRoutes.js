@@ -4,25 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const Auth_1 = require("../controllers/Auth");
+const AuthControllers_1 = require("../controllers/AuthControllers");
 const PasswordControllers_1 = require("../controllers/PasswordControllers");
 const multer_1 = __importDefault(require("../utils/multer"));
-const UserController_1 = require("../controllers/UserController");
+const UserControllers_1 = require("../controllers/UserControllers");
 const router = (0, express_1.Router)();
 //Basic auth routes
-router.get("/users/:id", Auth_1.getUser);
+router.get("/users/:id", AuthControllers_1.getUser);
 router.get("/check-withdrawal-password/:userId", PasswordControllers_1.checkWithdrawalPassword);
-router.post("/registration-code", Auth_1.requestVerificationCode);
-router.post("/register", Auth_1.register);
-router.post("/login", Auth_1.login);
+router.post("/registration-code", AuthControllers_1.requestVerificationCode);
+router.post("/register", AuthControllers_1.register);
+router.post("/login", AuthControllers_1.login);
 //Password routes
 router.post("/reset-password-code", PasswordControllers_1.requestResetCode);
 router.put("/reset-password", PasswordControllers_1.resetPassword);
 router.put("/update-account-password", PasswordControllers_1.updateAccountPassword);
 router.put("/set-withdrawal-password", PasswordControllers_1.setWithdrawalPassword);
 //manage assets routes
-router.post("/add-asset", UserController_1.addAsset);
-router.delete("/delete-asset", UserController_1.deleteAsset);
-router.delete("/delete-kyc/:userId", UserController_1.deleteKyc);
-router.put("/complete-kyc", multer_1.default.fields([{ name: "documentFront" }, { name: "documentBack" }]), UserController_1.completeKYC);
+router.post("/add-asset", UserControllers_1.addAsset);
+router.put("/update-asset-address", UserControllers_1.updateAssetAddress);
+router.delete("/delete-asset", UserControllers_1.deleteAsset);
+router.delete("/delete-kyc/:userId", UserControllers_1.deleteKyc);
+router.put("/complete-kyc", multer_1.default.fields([{ name: "documentFront" }, { name: "documentBack" }]), UserControllers_1.completeKYC);
 exports.default = router;

@@ -45,6 +45,37 @@ export const addAsset = async (req: Request, res: Response) => {
 	}
 };
 
+
+// ✅ Update User Asset (e.g., Address)
+export const updateAssetAddress = async (req: Request, res: Response) => {
+	try {
+		const { userId, symbol, address } = req.body;
+
+		// Validate input
+		if (!userId || !symbol || !address)
+			return res.status(400).json({ message: "User ID, asset symbol, and address are required." });
+
+		// Find user
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: "User not found." });
+
+		// Find the asset within user's assets
+		const asset = user.assets.find((asset) => asset.symbol === symbol);
+		if (!asset) return res.status(404).json({ message: "Asset not found in user account." });
+
+		// Update the address (or any other field)
+		asset.address = address;
+
+		// Save changes
+		await user.save();
+
+		res.status(200).json({ message: "Asset updated successfully.", asset });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+
 // ✅ Delete Asset from User
 export const deleteAsset = async (req: Request, res: Response) => {
 	try {

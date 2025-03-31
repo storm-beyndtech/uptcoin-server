@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { approveDeposit, cancelDeposit, createDeposit, getDepositById, getDeposits, rejectDeposit } from "../controllers/transactions/DepositController";
-import { approveWithdrawal, cancelWithdrawal, createWithdrawal, getWithdrawalById, getWithdrawals, rejectWithdrawal } from "../controllers/transactions/WithdrawalController";
-import { getUserTranfers, transferAsset } from "../controllers/transactions/TransferController";
-import { convertAsset, getUserConversions } from "../controllers/transactions/ConversionController";
-import { cancelTrade, getAllTrades, getUserTrades, placeTrade } from "../controllers/transactions/TradeController";
+import { approveDeposit, cancelDeposit, createDeposit, getDepositById, getDeposits, rejectDeposit } from "../controllers/transactions/DepositControllers";
+import { approveWithdrawal, cancelWithdrawal, createWithdrawal, getWithdrawalById, getWithdrawals, rejectWithdrawal } from "../controllers/transactions/WithdrawalControllers";
+import { getUserTranfers, transferAsset } from "../controllers/transactions/TransferControllers";
+import { convertAsset, getUserConversions } from "../controllers/transactions/ConversionControllers";
+import { cancelTrade, getAllTrades, getUserTrades, placeTrade } from "../controllers/transactions/TradeControllers";
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUser, login, register, requestVerificationCode } from "../controllers/Auth";
+import { getUser, login, register, requestVerificationCode } from "../controllers/AuthControllers";
 import {
 	checkWithdrawalPassword,
 	requestResetCode,
@@ -8,7 +8,7 @@ import {
 	updateAccountPassword,
 } from "../controllers/PasswordControllers";
 import upload from "../utils/multer";
-import { addAsset, completeKYC, deleteAsset, deleteKyc } from "../controllers/UserController";
+import { addAsset, completeKYC, deleteAsset, deleteKyc, updateAssetAddress } from "../controllers/UserControllers";
 
 const router = Router();
 
@@ -27,6 +27,7 @@ router.put("/set-withdrawal-password", setWithdrawalPassword);
 
 //manage assets routes
 router.post("/add-asset", addAsset);
+router.put("/update-asset-address", updateAssetAddress);
 router.delete("/delete-asset", deleteAsset);
 router.delete("/delete-kyc/:userId", deleteKyc);
 router.put(
