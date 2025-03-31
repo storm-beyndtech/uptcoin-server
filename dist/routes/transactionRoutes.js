@@ -15,16 +15,21 @@ router.put("/deposit/approve", DepositController_1.approveDeposit);
 router.put("/deposit/reject", DepositController_1.rejectDeposit);
 router.delete("/deposit/:id/cancel", DepositController_1.cancelDeposit);
 //Withdrawal Routes
-router.post("/withdraw", WithdrawalController_1.createWithdrawal);
 router.get("/withdrawals", WithdrawalController_1.getWithdrawals);
+router.post("/withdraw", WithdrawalController_1.createWithdrawal);
 router.get("/withdrawal/:id", WithdrawalController_1.getWithdrawalById);
+router.delete("/withdrawal/:id/cancel", WithdrawalController_1.cancelWithdrawal);
 router.put("/withdrawal/approve", WithdrawalController_1.approveWithdrawal);
 router.put("/withdrawal/reject", WithdrawalController_1.rejectWithdrawal);
-router.delete("/withdrawal/:id/cancel", WithdrawalController_1.cancelWithdrawal);
 //Transfer with account
+router.get("/transfer/:userId", TransferController_1.getUserTranfers);
 router.post("/transfer", TransferController_1.transferAsset);
 //Convert Asset
+router.get("/convert/:userId", ConversionController_1.getUserConversions);
 router.post("/convert", ConversionController_1.convertAsset);
-//Trade
+//Trade routes
+router.get("/trades/:userId", TradeController_1.getUserTrades);
+router.get("/trades", TradeController_1.getAllTrades);
 router.post("/trade", TradeController_1.placeTrade);
+router.put("/trade/:tradeId", TradeController_1.cancelTrade);
 exports.default = router;

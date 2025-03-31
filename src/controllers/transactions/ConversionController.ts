@@ -72,13 +72,26 @@ export const convertAsset = async (req: Request, res: Response) => {
 		});
 
 		return res.status(200).json({
-			message: "Conversion successful",
-			convertedAmount,
-			fee: feeAmount,
-			updatedAssets: updatedUser?.assets,
+			message: "Conversion successful"
 		});
 	} catch (error) {
 		console.error("Conversion error:", error);
 		return res.status(500).json({ message: "Server error", error });
 	}
 };
+
+
+// Get all conversions for a user
+export const getUserConversions = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    if (!Types.ObjectId.isValid(userId)) return res.status(400).json({ message: "Invalid user ID" });
+
+    const conversion = await Conversion.find({ userId }).sort({ createdAt: -1 });
+    res.status(200).json(conversion);
+  } catch (error) {
+    console.error("Error fetching conversions:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

@@ -8,6 +8,7 @@ export const userValidationSchema = z.object({
 	phone: z.string().optional(),
 	country: z.string().optional(),
 	documentType: z.string().optional(),
+	documentNumber: z.string().optional(),
 	documentFront: z.string().optional(),
 	documentBack: z.string().optional(),
 
@@ -16,10 +17,15 @@ export const userValidationSchema = z.object({
 	withdrawalPassword: z.string().min(6, "Password must be at least 6 characters"),
 	referral: z.string().optional(),
 	isEmailVerified: z.boolean().default(false),
+	kycStatus: z.string(),
 
 	tradingStatus: z.string().optional(),
 	tradingLevel: z.string().optional(),
-	tradingLimit: z.string().optional(),
+  tradingLimit: z.string().optional(),
+  minDeposit: z.number(),
+  maxDeposit: z.number(),
+  minWithdrawal: z.number(),
+  maxWithdrawal: z.number(),
 
 	assets: z
 		.array(
@@ -27,10 +33,10 @@ export const userValidationSchema = z.object({
 				symbol: z.string(),
 				funding: z.number(),
 				spot: z.number(),
-				staking: z.number(),
 				name: z.string(),
 				address: z.string(),
-				network: z.string(),
+        network: z.string(),
+        status: z.string()
 			}),
 		),
 

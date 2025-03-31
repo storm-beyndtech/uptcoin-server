@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 // Default assets with zero balances
 const defaultAssets = [
-    { symbol: "BTC", funding: 0, spot: 0, staking: 0, name: "Bitcoin", address: "", network: "BTC" },
-    { symbol: "ETH", funding: 0, spot: 0, staking: 0, name: "Ethereum", address: "", network: "ERC20" },
-    { symbol: "USDT", funding: 0, spot: 0, staking: 0, name: "Tether", address: "", network: "ERC20" },
-    { symbol: "ATOM", funding: 0, spot: 0, staking: 0, name: "Cosmos", address: "", network: "ATOM" },
-    { symbol: "SOL", funding: 0, spot: 0, staking: 0, name: "Solana", address: "", network: "SOL" },
+    { symbol: "BTC", funding: 0, spot: 0, name: "Bitcoin", address: "", network: "BTC", status: "activated" },
+    { symbol: "ETH", funding: 0, spot: 0, name: "Ethereum", address: "", network: "ERC20", status: "activated" },
+    { symbol: "USDT", funding: 0, spot: 0, name: "Tether", address: "", network: "ERC20", status: "activated" },
+    { symbol: "ATOM", funding: 0, spot: 0, name: "Cosmos", address: "", network: "ATOM", status: "activated" },
+    { symbol: "SOL", funding: 0, spot: 0, name: "Solana", address: "", network: "SOL", status: "activated" },
 ];
 // Create the Mongoose Schema
 const UserSchema = new mongoose_1.Schema({
@@ -17,6 +17,7 @@ const UserSchema = new mongoose_1.Schema({
     phone: { type: String },
     country: { type: String },
     documentType: { type: String },
+    documentNumber: { type: String },
     documentFront: { type: String },
     documentBack: { type: String },
     email: { type: String, required: true, unique: true },
@@ -24,25 +25,42 @@ const UserSchema = new mongoose_1.Schema({
     withdrawalPassword: { type: String },
     referral: { type: String },
     isEmailVerified: { type: Boolean, default: false },
+    kycStatus: {
+        type: String,
+        enum: ["notSubmitted", "pending", "approved", "rejected"],
+        default: "notSubmitted",
+    },
     tradingStatus: { type: String, default: "None" },
     tradingLevel: { type: String, default: "None" },
     tradingLimit: { type: String, default: "None" },
+    minDeposit: { type: Number, default: 100 },
+    maxDeposit: { type: Number, default: 1000000000 },
+    minWithdrawal: { type: Number, default: 100 },
+    maxWithdrawal: { type: Number, default: 1000000000 },
     assets: {
         type: [
             {
                 symbol: { type: String },
                 funding: { type: Number },
                 spot: { type: Number },
-                staking: { type: Number },
                 name: { type: String },
                 address: { type: String },
                 network: { type: String },
+                status: { type: String, enum: ["activated", "suspended"], default: "activated" },
             },
         ],
         default: defaultAssets,
     },
+    uid: { type: String, unique: true }, // ✅ Short Unique ID
     disabled: { type: Boolean, default: false },
 }, { timestamps: true });
+// ✅ Generate Short UID before saving a new user
+UserSchema.pre("save", async function (next) {
+    if (!this.uid) {
+        this.uid = this._id.toString().slice(-6); // Short UID from _id
+    }
+    next();
+});
 // Create and Export the Model
 const User = (0, mongoose_1.model)("User", UserSchema);
 exports.default = User;

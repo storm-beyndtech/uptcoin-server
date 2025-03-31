@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.convertAsset = void 0;
+exports.getUserConversions = exports.convertAsset = void 0;
 const mongoose_1 = require("mongoose");
 const userModel_1 = __importDefault(require("../../models/userModel"));
 const coinModel_1 = require("../../models/coinModel");
@@ -67,10 +67,7 @@ const convertAsset = async (req, res) => {
             to: { symbol: to, amount: convertedAmount, price: toPrice },
         });
         return res.status(200).json({
-            message: "Conversion successful",
-            convertedAmount,
-            fee: feeAmount,
-            updatedAssets: updatedUser?.assets,
+            message: "Conversion successful"
         });
     }
     catch (error) {
@@ -79,3 +76,18 @@ const convertAsset = async (req, res) => {
     }
 };
 exports.convertAsset = convertAsset;
+// Get all conversions for a user
+const getUserConversions = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!mongoose_1.Types.ObjectId.isValid(userId))
+            return res.status(400).json({ message: "Invalid user ID" });
+        const conversion = await Conversion_1.default.find({ userId }).sort({ createdAt: -1 });
+        res.status(200).json(conversion);
+    }
+    catch (error) {
+        console.error("Error fetching conversions:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.getUserConversions = getUserConversions;
