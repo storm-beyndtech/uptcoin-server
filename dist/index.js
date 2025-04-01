@@ -30,6 +30,7 @@ app.use(express_1.default.json());
     try {
         await mongoose_1.default.connect(process.env.MONGODB_URL || "");
         console.log("Connected to MongoDB...");
+        // seedDatabase()
         // Start CryptoCompare WebSocket
         (0, cryptoService_1.startCryptoWebSocket)();
         // WebSocket for frontend clients

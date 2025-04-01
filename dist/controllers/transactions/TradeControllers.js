@@ -33,7 +33,7 @@ const placeTrade = async (req, res) => {
             return res.status(400).json({ message: "User assets not found" });
         // Fetch real-time price for the asset
         const assetData = cryptoService_1.coinCache[symbol];
-        if (!assetData) {
+        if (!assetData || assetData.price === 0) {
             return res.status(400).json({ message: "Real-time price data not available for the asset" });
         }
         const marketPrice = assetData.price;

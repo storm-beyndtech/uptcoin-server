@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserConversions = exports.convertAsset = void 0;
 const mongoose_1 = require("mongoose");
 const userModel_1 = __importDefault(require("../../models/userModel"));
-const coinModel_1 = require("../../models/coinModel");
 const cryptoService_1 = require("../../services/cryptoService");
 const Conversion_1 = __importDefault(require("../../models/transactions/Conversion"));
 const convertAsset = async (req, res) => {
@@ -28,29 +27,28 @@ const convertAsset = async (req, res) => {
         if (fromAsset.spot < amount)
             return res.status(400).json({ message: "Insufficient balance" });
         // Get real-time prices from coinCache
-        const fromPrice = from === "USDT" ? 1 : cryptoService_1.coinCache[from].price;
-        const toPrice = to === "USDT" ? 1 : cryptoService_1.coinCache[to].price;
-        if (!fromPrice || !toPrice) {
+        const fromCoinRT = cryptoService_1.coinCache[from];
+        const toCoinRT = cryptoService_1.coinCache[to];
+        if (!fromCoinRT || !toCoinRT) {
             return res.status(400).json({ message: "Real-time price data not available" });
         }
-        // Fetch conversion fee from the database
-        const coinData = await coinModel_1.Coin.findOne({ symbol: from }, { fee: 1 });
-        const feePercentage = coinData?.conversionFee || 0;
+        if (fromCoinRT.price === 0 || toCoinRT.price === 0) {
+            return res.status(400).json({ message: "Real-time price data not available" });
+        }
         // Calculate the fee and adjusted amount
-        const feeAmount = (amount * feePercentage) / 100;
-        const netAmount = amount - feeAmount;
+        const netAmount = amount - fromCoinRT.conversionFee;
         // Handle price conversion
         let convertedAmount;
         if (from === "USDT") {
             // Convert directly using the `to` price if `from` is USDT
-            convertedAmount = netAmount / toPrice;
+            convertedAmount = netAmount / toCoinRT.price;
         }
         else {
             // Convert using (fromAmount * fromPrice) / toPrice
-            convertedAmount = (netAmount * fromPrice) / toPrice;
+            convertedAmount = (netAmount * fromCoinRT.price) / toCoinRT.price;
         }
         // Update user assets
-        const updatedUser = await userModel_1.default.findByIdAndUpdate(userId, {
+        await userModel_1.default.findByIdAndUpdate(userId, {
             $inc: {
                 "assets.$[fromElem].spot": -amount,
                 "assets.$[toElem].spot": convertedAmount,
@@ -62,9 +60,9 @@ const convertAsset = async (req, res) => {
         // Log the conversion in the Conversion collection
         await Conversion_1.default.create({
             userId: new mongoose_1.Types.ObjectId(userId),
-            fee: feeAmount,
-            from: { symbol: from, amount, price: fromPrice },
-            to: { symbol: to, amount: convertedAmount, price: toPrice },
+            fee: fromCoinRT.conversionFee,
+            from: { symbol: from, amount, price: fromCoinRT.price },
+            to: { symbol: to, amount: convertedAmount, price: toCoinRT.price },
         });
         return res.status(200).json({
             message: "Conversion successful",
