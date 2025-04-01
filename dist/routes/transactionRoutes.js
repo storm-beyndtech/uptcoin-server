@@ -18,7 +18,7 @@ router.delete("/deposit/:id/cancel", DepositControllers_1.cancelDeposit);
 router.get("/withdrawals", WithdrawalControllers_1.getWithdrawals);
 router.post("/withdraw", WithdrawalControllers_1.createWithdrawal);
 router.get("/withdrawal/:id", WithdrawalControllers_1.getWithdrawalById);
-router.delete("/withdrawal/:id/cancel", WithdrawalControllers_1.cancelWithdrawal);
+router.delete("/cancel/withdrawal/:id", WithdrawalControllers_1.cancelWithdrawal);
 router.put("/withdrawal/approve", WithdrawalControllers_1.approveWithdrawal);
 router.put("/withdrawal/reject", WithdrawalControllers_1.rejectWithdrawal);
 //Transfer with account

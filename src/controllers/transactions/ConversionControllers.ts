@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import User from "../../models/userModel";
-import { Coin } from "../../models/coinModel";
 import { coinCache } from "../../services/cryptoService";
 import Conversion from "../../models/transactions/Conversion";
 
@@ -23,33 +22,32 @@ export const convertAsset = async (req: Request, res: Response) => {
 		if (fromAsset.spot < amount) return res.status(400).json({ message: "Insufficient balance" });
 
 		// Get real-time prices from coinCache
-		const fromPrice = from === "USDT" ? 1 : coinCache[from].price;
-    const toPrice = to === "USDT" ? 1 : coinCache[to].price;
+		const fromCoinRT = coinCache[from];
+		const toCoinRT = coinCache[to];
 
-		if (!fromPrice || !toPrice) {
+		if (!fromCoinRT || !toCoinRT) {
 			return res.status(400).json({ message: "Real-time price data not available" });
 		}
 
-		// Fetch conversion fee from the database
-		const coinData = await Coin.findOne({ symbol: from }, { fee: 1 });
-		const feePercentage = coinData?.conversionFee || 0; 
+		if (fromCoinRT.price === 0 || toCoinRT.price === 0) {
+			return res.status(400).json({ message: "Real-time price data not available" });
+		}
 
 		// Calculate the fee and adjusted amount
-		const feeAmount = (amount * feePercentage) / 100;
-		const netAmount = amount - feeAmount;
+		const netAmount = amount - fromCoinRT.conversionFee;
 
 		// Handle price conversion
 		let convertedAmount;
 		if (from === "USDT") {
 			// Convert directly using the `to` price if `from` is USDT
-			convertedAmount = netAmount / toPrice;
+			convertedAmount = netAmount / toCoinRT.price;
 		} else {
 			// Convert using (fromAmount * fromPrice) / toPrice
-			convertedAmount = (netAmount * fromPrice) / toPrice;
+			convertedAmount = (netAmount * fromCoinRT.price) / toCoinRT.price;
 		}
 
 		// Update user assets
-		const updatedUser = await User.findByIdAndUpdate(
+		await User.findByIdAndUpdate(
 			userId,
 			{
 				$inc: {
@@ -60,38 +58,35 @@ export const convertAsset = async (req: Request, res: Response) => {
 			{
 				arrayFilters: [{ "fromElem.symbol": from }, { "toElem.symbol": to }],
 				new: true,
-			}
+			},
 		);
 
 		// Log the conversion in the Conversion collection
 		await Conversion.create({
 			userId: new Types.ObjectId(userId),
-			fee: feeAmount,
-			from: { symbol: from, amount, price: fromPrice },
-			to: { symbol: to, amount: convertedAmount, price: toPrice },
+			fee: fromCoinRT.conversionFee,
+			from: { symbol: from, amount, price: fromCoinRT.price },
+			to: { symbol: to, amount: convertedAmount, price: toCoinRT.price },
 		});
 
 		return res.status(200).json({
-			message: "Conversion successful"
+			message: "Conversion successful",
 		});
-	} catch (error) {
-		console.error("Conversion error:", error);
-		return res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
-
 // Get all conversions for a user
 export const getUserConversions = async (req: Request, res: Response) => {
-  try {
-    const { userId } = req.params;
-    if (!Types.ObjectId.isValid(userId)) return res.status(400).json({ message: "Invalid user ID" });
+	try {
+		const { userId } = req.params;
+		if (!Types.ObjectId.isValid(userId)) return res.status(400).json({ message: "Invalid user ID" });
 
-    const conversion = await Conversion.find({ userId }).sort({ createdAt: -1 });
-    res.status(200).json(conversion);
-  } catch (error) {
-    console.error("Error fetching conversions:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
+		const conversion = await Conversion.find({ userId }).sort({ createdAt: -1 });
+		res.status(200).json(conversion);
+	} catch (error) {
+		console.error("Error fetching conversions:", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
 };
-

@@ -99,7 +99,7 @@ const placeTrade = async (req, res) => {
     }
     catch (error) {
         console.error("Error placing trade:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.placeTrade = placeTrade;
@@ -121,7 +121,7 @@ const executeTradeController = async (req, res) => {
     }
     catch (error) {
         console.error("Error executing trade:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.executeTradeController = executeTradeController;
@@ -143,7 +143,7 @@ const cancelTrade = async (req, res) => {
     }
     catch (error) {
         console.error("Error canceling trade:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.cancelTrade = cancelTrade;

@@ -6,7 +6,7 @@ const coins_1 = require("../utils/coins");
 const seedDatabase = async () => {
     try {
         await coinModel_1.Coin.deleteMany({}); // Clear the collection
-        await coinModel_1.Coin.insertMany(coins_1.coinArray); // Insert the array
+        await coinModel_1.Coin.insertMany(coins_1.coinArray, { ordered: true });
         console.log("Database seeded successfully");
         process.exit(0);
     }

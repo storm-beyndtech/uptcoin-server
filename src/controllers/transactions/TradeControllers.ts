@@ -32,7 +32,7 @@ export const placeTrade = async (req: Request, res: Response) => {
 
 		// Fetch real-time price for the asset
 		const assetData = coinCache[symbol];
-		if (!assetData) {
+		if (!assetData || assetData.price === 0) {
 			return res.status(400).json({ message: "Real-time price data not available for the asset" });
 		}
 
@@ -102,22 +102,20 @@ export const placeTrade = async (req: Request, res: Response) => {
 					},
 				);
 			}
-    } else if (orderType === "trade") {
-      if (!pendingLimitOrders.has(symbol)) pendingLimitOrders.set(symbol, []);
-      pendingLimitOrders.get(symbol).push(newTrade);
-    }
+		} else if (orderType === "trade") {
+			if (!pendingLimitOrders.has(symbol)) pendingLimitOrders.set(symbol, []);
+			pendingLimitOrders.get(symbol).push(newTrade);
+		}
 
 		// Save trade
 		await newTrade.save();
 
 		res.status(201).json({ message: "Trade placed successfully", trade: newTrade });
-	} catch (error) {
+	} catch (error: any) {
 		console.error("Error placing trade:", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: error.message });
 	}
 };
-
-
 
 // Execute a trade (Manual/Admin trigger)
 export const executeTradeController = async (req: Request, res: Response) => {
@@ -137,9 +135,9 @@ export const executeTradeController = async (req: Request, res: Response) => {
 		}
 
 		res.status(200).json({ message: "Trade executed successfully", trade });
-	} catch (error) {
+	} catch (error: any) {
 		console.error("Error executing trade:", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -159,9 +157,9 @@ export const cancelTrade = async (req: Request, res: Response) => {
 		trade.status = "canceled";
 		await trade.save();
 		res.status(200).json({ message: "Trade canceled successfully", trade });
-	} catch (error) {
+	} catch (error: any) {
 		console.error("Error canceling trade:", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: error.message });
 	}
 };
 

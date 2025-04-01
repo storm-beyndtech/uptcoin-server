@@ -3,11 +3,14 @@ import bcrypt from "bcryptjs";
 import User from "../../models/userModel";
 import Withdrawal from "../../models/transactions/Withdrawal";
 import { adminTransactionAlert, transactionStatusMail } from "../../services/emailService";
+import { Coin } from "../../models/coinModel";
 
 // Create a withdrawal request
 export const createWithdrawal = async (req: Request, res: Response) => {
 	try {
-		const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
+    const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
+    
+    console.log(userId, amount, symbol, address, network, withdrawalPassword)
 
 		// Validate required fields
 		if (!userId || !amount || !symbol || !address || !network) {
@@ -19,24 +22,48 @@ export const createWithdrawal = async (req: Request, res: Response) => {
 		}
 
 		const user = await User.findById(userId);
-		if (!user || !user.withdrawalPassword) {
-			return res.status(400).json({ message: "User or withdrawal password not found." });
+		if (!user) {
+			return res.status(400).json({ message: "User not found." });
 		}
 
-		// Compare passwords
+		if (!user.withdrawalPassword) {
+			return res.status(400).json({ message: "Create/Enter withdrawal password." });
+		}
+
+		// Compare withdrawal passwords
 		const isMatch = await bcrypt.compare(withdrawalPassword, user.withdrawalPassword);
 		if (!isMatch) {
 			return res.status(401).json({ message: "Incorrect withdrawal password." });
 		}
 
-		const withdrawal = new Withdrawal({ userId, amount, symbol, address, network });
+		const coin = await Coin.findOne({ symbol });
+		if (!coin) {
+			return res.status(400).json({ message: "Coin not found." });
+		}
+
+		const fee = coin.withdrawalFee || 0;
+		const totalAmount = Number(amount) - Number(fee);
+
+		if (totalAmount <= 0) {
+			return res.status(400).json({ message: "Amount must be greater than the withdrawal fee." });
+		}
+
+		const withdrawal = new Withdrawal({
+			userId,
+			amount: totalAmount,
+			symbol,
+			address,
+			network,
+			fee,
+		});
+
 		await withdrawal.save();
 
 		await adminTransactionAlert(user.email, amount, symbol);
 
 		res.status(201).json({ message: "Withdrawal request created", withdrawal });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -62,8 +89,8 @@ export const getWithdrawals = async (req: Request, res: Response) => {
 		const withdrawals = await Withdrawal.find(filter);
 
 		res.status(200).json(withdrawals);
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -74,8 +101,8 @@ export const getWithdrawalById = async (req: Request, res: Response) => {
 		const withdrawal = await Withdrawal.findById(id).populate("userId", "email");
 		if (!withdrawal) return res.status(404).json({ message: "Withdrawal not found" });
 		res.status(200).json(withdrawal);
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -97,8 +124,8 @@ export const approveWithdrawal = async (req: Request, res: Response) => {
 			await transactionStatusMail(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Approved");
 
 		res.status(200).json({ message: "Withdrawal approved", withdrawal });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -120,8 +147,8 @@ export const rejectWithdrawal = async (req: Request, res: Response) => {
 			await transactionStatusMail(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Rejected");
 
 		res.status(200).json({ message: "Withdrawal rejected", withdrawal });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -142,7 +169,7 @@ export const cancelWithdrawal = async (req: Request, res: Response) => {
 		await Withdrawal.findByIdAndDelete(id);
 
 		res.status(200).json({ message: "Withdrawal canceled successfully" });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };

@@ -62,8 +62,8 @@ export const transferAsset = async (req: Request, res: Response) => {
 		await transfer.save();
 
 		res.status(200).json({ message: "Transfer successful" });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 

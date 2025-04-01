@@ -50,7 +50,7 @@ const transferAsset = async (req, res) => {
         res.status(200).json({ message: "Transfer successful" });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.transferAsset = transferAsset;

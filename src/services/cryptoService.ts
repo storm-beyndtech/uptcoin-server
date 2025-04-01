@@ -97,10 +97,10 @@ export const startCryptoWebSocket = async () => {
 						image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL.toLowerCase()}@2x.png`,
 						address: coinInfo ? coinInfo.address : "",
 						network: coinInfo ? coinInfo.network : "",
-						withdrawalFee: coinInfo ? coinInfo.withdrawalFee : "",
-						conversionFee: coinInfo ? coinInfo.conversionFee : "",
-						minDeposit: coinInfo ? coinInfo.minDeposit : "",
-						minWithdraw: coinInfo ? coinInfo.minWithdraw : "",
+						withdrawalFee: coinInfo ? coinInfo.withdrawalFee : 0,
+						conversionFee: coinInfo ? coinInfo.conversionFee : 0,
+						minDeposit: coinInfo ? coinInfo.minDeposit : 0,
+						minWithdraw: coinInfo ? coinInfo.minWithdraw : 0,
 					};
 				}
 

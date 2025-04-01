@@ -67,12 +67,11 @@ const convertAsset = async (req, res) => {
             to: { symbol: to, amount: convertedAmount, price: toPrice },
         });
         return res.status(200).json({
-            message: "Conversion successful"
+            message: "Conversion successful",
         });
     }
     catch (error) {
-        console.error("Conversion error:", error);
-        return res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.convertAsset = convertAsset;

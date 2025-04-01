@@ -24,7 +24,7 @@ const requestResetCode = async (req, res) => {
         res.status(200).json({ message: "Password reset code sent successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error sending reset code" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.requestResetCode = requestResetCode;
@@ -41,7 +41,7 @@ const resetPassword = async (req, res) => {
         res.status(200).json({ message: "Password reset successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Password reset failed" });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.resetPassword = resetPassword;
@@ -59,7 +59,7 @@ const checkWithdrawalPassword = async (req, res) => {
         res.status(200).json({ hasWithdrawalPassword: !!user.withdrawalPassword });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.checkWithdrawalPassword = checkWithdrawalPassword;
@@ -100,7 +100,7 @@ const setWithdrawalPassword = async (req, res) => {
         });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.setWithdrawalPassword = setWithdrawalPassword;
@@ -131,8 +131,7 @@ const updateAccountPassword = async (req, res) => {
         res.status(200).json({ message: "Password updated successfully." });
     }
     catch (error) {
-        console.error("Error updating password:", error);
-        res.status(500).json({ message: "Server error. Please try again later." });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.updateAccountPassword = updateAccountPassword;

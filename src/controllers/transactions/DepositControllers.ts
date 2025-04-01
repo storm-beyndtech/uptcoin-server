@@ -26,8 +26,8 @@ export const createDeposit = async (req: Request, res: Response) => {
 		await adminTransactionAlert(user.email, amount, symbol);
 
 		res.status(201).json({ message: "Deposit request created", deposit });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -53,8 +53,8 @@ export const getDeposits = async (req: Request, res: Response) => {
 		const deposits = await Deposit.find(filter);
 
 		res.status(200).json(deposits);
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -65,8 +65,8 @@ export const getDepositById = async (req: Request, res: Response) => {
 		const deposit = await Deposit.findById(id).populate("userId", "email");
 		if (!deposit) return res.status(404).json({ message: "Deposit not found" });
 		res.status(200).json(deposit);
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -96,8 +96,8 @@ export const approveDeposit = async (req: Request, res: Response) => {
 			transactionStatusMail(updatedUser.email, "Deposit", deposit.amount, deposit.symbol, "Approved");
 
 		res.status(200).json({ message: "Deposit approved", deposit });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -117,8 +117,8 @@ export const rejectDeposit = async (req: Request, res: Response) => {
 		if (user) transactionStatusMail(user.email, "Deposit", deposit.amount, deposit.symbol, "Rejected");
 
 		res.status(200).json({ message: "Deposit rejected", deposit });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -139,7 +139,7 @@ export const cancelDeposit = async (req: Request, res: Response) => {
 		await Deposit.findByIdAndDelete(id);
 
 		res.status(200).json({ message: "Deposit canceled successfully" });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };

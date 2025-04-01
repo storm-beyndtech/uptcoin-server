@@ -22,8 +22,8 @@ export const requestResetCode = async (req: Request, res: Response) => {
 		await passwordResetMail(email, code);
 
 		res.status(200).json({ message: "Password reset code sent successfully" });
-	} catch (error) {
-		res.status(500).json({ message: "Error sending reset code" });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -41,8 +41,8 @@ export const resetPassword = async (req: Request, res: Response) => {
 		await User.updateOne({ email }, { password: hashedPassword });
 
 		res.status(200).json({ message: "Password reset successfully" });
-	} catch (error) {
-		res.status(500).json({ message: "Password reset failed" });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -62,8 +62,8 @@ export const checkWithdrawalPassword = async (req: Request, res: Response) => {
 		}
 
 		res.status(200).json({ hasWithdrawalPassword: !!user.withdrawalPassword });
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -109,8 +109,8 @@ export const setWithdrawalPassword = async (req: Request, res: Response) => {
 				? "Withdrawal password updated successfully."
 				: "Withdrawal password set successfully.",
 		});
-	} catch (error) {
-		res.status(500).json({ message: "Server error", error });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };
 
@@ -145,8 +145,7 @@ export const updateAccountPassword = async (req: Request, res: Response) => {
 		await user.save();
 
 		res.status(200).json({ message: "Password updated successfully." });
-	} catch (error) {
-		console.error("Error updating password:", error);
-		res.status(500).json({ message: "Server error. Please try again later." });
+	} catch (error:any) {
+		res.status(500).json({ message: error.message });
 	}
 };

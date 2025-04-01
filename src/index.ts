@@ -27,7 +27,9 @@ app.use(express.json());
 (async function () {
 	try {
 		await mongoose.connect(process.env.MONGODB_URL || "");
-		console.log("Connected to MongoDB...");
+    console.log("Connected to MongoDB...");
+    
+    // seedDatabase()
 
 		// Start CryptoCompare WebSocket
 		startCryptoWebSocket();

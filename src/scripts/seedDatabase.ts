@@ -4,7 +4,7 @@ import { coinArray } from "../utils/coins";
 export const seedDatabase = async () => {
 	try {
 		await Coin.deleteMany({}); // Clear the collection
-		await Coin.insertMany(coinArray); // Insert the array
+		await Coin.insertMany(coinArray, { ordered: true });
 
 		console.log("Database seeded successfully");
 		process.exit(0);

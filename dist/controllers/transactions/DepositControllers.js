@@ -27,7 +27,7 @@ const createDeposit = async (req, res) => {
         res.status(201).json({ message: "Deposit request created", deposit });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.createDeposit = createDeposit;
@@ -49,7 +49,7 @@ const getDeposits = async (req, res) => {
         res.status(200).json(deposits);
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.getDeposits = getDeposits;
@@ -63,7 +63,7 @@ const getDepositById = async (req, res) => {
         res.status(200).json(deposit);
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.getDepositById = getDepositById;
@@ -89,7 +89,7 @@ const approveDeposit = async (req, res) => {
         res.status(200).json({ message: "Deposit approved", deposit });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.approveDeposit = approveDeposit;
@@ -110,7 +110,7 @@ const rejectDeposit = async (req, res) => {
         res.status(200).json({ message: "Deposit rejected", deposit });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.rejectDeposit = rejectDeposit;
@@ -129,7 +129,7 @@ const cancelDeposit = async (req, res) => {
         res.status(200).json({ message: "Deposit canceled successfully" });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ message: error.message });
     }
 };
 exports.cancelDeposit = cancelDeposit;

@@ -20,7 +20,7 @@ router.delete("/deposit/:id/cancel", cancelDeposit);
 router.get("/withdrawals", getWithdrawals);
 router.post("/withdraw", createWithdrawal);
 router.get("/withdrawal/:id", getWithdrawalById);
-router.delete("/withdrawal/:id/cancel", cancelWithdrawal);
+router.delete("/cancel/withdrawal/:id", cancelWithdrawal);
 router.put("/withdrawal/approve", approveWithdrawal);
 router.put("/withdrawal/reject", rejectWithdrawal);
 
