@@ -32,4 +32,5 @@ router.get("/trades/:userId", TradeControllers_1.getUserTrades);
 router.get("/trades", TradeControllers_1.getAllTrades);
 router.post("/trade", TradeControllers_1.placeTrade);
 router.put("/trade/:tradeId", TradeControllers_1.cancelTrade);
+router.put("/trader/", TradeControllers_1.updateTraderStatus);
 exports.default = router;

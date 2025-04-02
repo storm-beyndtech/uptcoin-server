@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllTrades = exports.getUserTrades = exports.cancelTrade = exports.executeTradeController = exports.placeTrade = void 0;
+exports.updateTraderStatus = exports.getAllTrades = exports.getUserTrades = exports.cancelTrade = exports.executeTradeController = exports.placeTrade = void 0;
 const mongoose_1 = require("mongoose");
 const Trade_1 = __importDefault(require("../../models/transactions/Trade"));
 const tradeEngine_1 = require("../../services/tradeEngine");
@@ -174,3 +174,26 @@ const getAllTrades = async (_req, res) => {
     }
 };
 exports.getAllTrades = getAllTrades;
+//Update Trader Status 
+const updateTraderStatus = async (req, res) => {
+    try {
+        const { tradingStatus, userId } = req.body;
+        if (!tradingStatus) {
+            return res.status(400).json({ message: "Invalid Trading Status" });
+        }
+        if (!mongoose_1.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+        // Find user and update their trader status
+        const updatedUser = await userModel_1.default.findByIdAndUpdate(userId, { tradingStatus }, { new: true, runValidators: true });
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "Trader status updated successfully", user: updatedUser });
+    }
+    catch (error) {
+        console.error("Error updating trader status:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+exports.updateTraderStatus = updateTraderStatus;

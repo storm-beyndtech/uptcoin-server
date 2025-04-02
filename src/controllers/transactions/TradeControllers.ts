@@ -187,3 +187,35 @@ export const getAllTrades = async (_req: Request, res: Response) => {
 		res.status(500).json({ message: "Internal server error" });
 	}
 };
+
+
+//Update Trader Status 
+export const updateTraderStatus = async (req: Request, res: Response) => {
+	try {
+		const { tradingStatus, userId } = req.body;
+
+		if (!tradingStatus) {
+			return res.status(400).json({ message: "Invalid Trading Status" });
+		}
+
+		if (!Types.ObjectId.isValid(userId)) {
+			return res.status(400).json({ message: "Invalid user ID" });
+		}
+
+		// Find user and update their trader status
+		const updatedUser = await User.findByIdAndUpdate(
+			userId,
+			{ tradingStatus },
+			{ new: true, runValidators: true }
+		);
+
+		if (!updatedUser) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		res.status(200).json({ message: "Trader status updated successfully", user: updatedUser });
+	} catch (error) {
+		console.error("Error updating trader status:", error);
+		res.status(500).json({ message: "Internal server error" });
+	}
+};

@@ -3,7 +3,7 @@ import { approveDeposit, cancelDeposit, createDeposit, getDepositById, getDeposi
 import { approveWithdrawal, cancelWithdrawal, createWithdrawal, getWithdrawalById, getWithdrawals, rejectWithdrawal } from "../controllers/transactions/WithdrawalControllers";
 import { getUserTranfers, transferAsset } from "../controllers/transactions/TransferControllers";
 import { convertAsset, getUserConversions } from "../controllers/transactions/ConversionControllers";
-import { cancelTrade, getAllTrades, getUserTrades, placeTrade } from "../controllers/transactions/TradeControllers";
+import { cancelTrade, getAllTrades, getUserTrades, placeTrade, updateTraderStatus } from "../controllers/transactions/TradeControllers";
 
 const router = Router();
 
@@ -39,6 +39,7 @@ router.get("/trades/:userId", getUserTrades);
 router.get("/trades", getAllTrades);
 router.post("/trade", placeTrade);
 router.put("/trade/:tradeId", cancelTrade);
+router.put("/trader/", updateTraderStatus);
 
 
 

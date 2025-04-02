@@ -4,7 +4,7 @@ import { UserType } from "../validation/schemas";
 // Define the User Document Interface
 export interface IUser extends Document, UserType {
   _id: Types.ObjectId;
-  uid: string; // New unique ID field
+  uid: string;
 }
 
 // Default assets with zero balances
