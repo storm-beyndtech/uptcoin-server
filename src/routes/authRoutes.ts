@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getUser, login, register, requestVerificationCode } from "../controllers/AuthControllers";
+import { getAllUsers, getUser, login, register, requestVerificationCode } from "../controllers/AuthControllers";
 import {
 	checkWithdrawalPassword,
 	requestResetCode,
@@ -14,6 +14,7 @@ const router = Router();
 
 //Basic auth routes
 router.get("/users/:id", getUser);
+router.get("/users", getAllUsers);
 router.get("/check-withdrawal-password/:userId", checkWithdrawalPassword);
 router.post("/registration-code", requestVerificationCode);
 router.post("/register", register);

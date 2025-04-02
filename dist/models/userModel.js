@@ -33,6 +33,7 @@ const UserSchema = new mongoose_1.Schema({
     tradingStatus: { type: String, default: "None" },
     tradingLevel: { type: String, default: "None" },
     tradingLimit: { type: String, default: "None" },
+    isTradeSuspended: { type: Boolean, default: false },
     minDeposit: { type: Number, default: 100 },
     maxDeposit: { type: Number, default: 1000000000 },
     minWithdrawal: { type: Number, default: 100 },

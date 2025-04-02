@@ -21,24 +21,24 @@ export const userValidationSchema = z.object({
 
 	tradingStatus: z.string().optional(),
 	tradingLevel: z.string().optional(),
-  tradingLimit: z.string().optional(),
-  minDeposit: z.number(),
-  maxDeposit: z.number(),
-  minWithdrawal: z.number(),
-  maxWithdrawal: z.number(),
+	tradingLimit: z.string().optional(),
+	isTradeSuspended: z.boolean().default(false),
+	minDeposit: z.number(),
+	maxDeposit: z.number(),
+	minWithdrawal: z.number(),
+	maxWithdrawal: z.number(),
 
-	assets: z
-		.array(
-			z.object({
-				symbol: z.string(),
-				funding: z.number(),
-				spot: z.number(),
-				name: z.string(),
-				address: z.string(),
-        network: z.string(),
-        status: z.string()
-			}),
-		),
+	assets: z.array(
+		z.object({
+			symbol: z.string(),
+			funding: z.number(),
+			spot: z.number(),
+			name: z.string(),
+			address: z.string(),
+			network: z.string(),
+			status: z.string(),
+		}),
+	),
 
 	disabled: z.boolean().default(false),
 });

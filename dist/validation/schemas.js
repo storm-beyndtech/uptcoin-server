@@ -22,19 +22,19 @@ exports.userValidationSchema = zod_1.z.object({
     tradingStatus: zod_1.z.string().optional(),
     tradingLevel: zod_1.z.string().optional(),
     tradingLimit: zod_1.z.string().optional(),
+    isTradeSuspended: zod_1.z.boolean().default(false),
     minDeposit: zod_1.z.number(),
     maxDeposit: zod_1.z.number(),
     minWithdrawal: zod_1.z.number(),
     maxWithdrawal: zod_1.z.number(),
-    assets: zod_1.z
-        .array(zod_1.z.object({
+    assets: zod_1.z.array(zod_1.z.object({
         symbol: zod_1.z.string(),
         funding: zod_1.z.number(),
         spot: zod_1.z.number(),
         name: zod_1.z.string(),
         address: zod_1.z.string(),
         network: zod_1.z.string(),
-        status: zod_1.z.string()
+        status: zod_1.z.string(),
     })),
     disabled: zod_1.z.boolean().default(false),
 });

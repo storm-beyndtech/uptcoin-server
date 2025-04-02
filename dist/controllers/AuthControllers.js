@@ -3,13 +3,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.register = exports.requestVerificationCode = exports.getUser = void 0;
+exports.login = exports.register = exports.requestVerificationCode = exports.getUser = exports.getAllUsers = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const codeService_1 = require("../services/codeService");
 const token_1 = require("../services/token");
 const emailService_1 = require("../services/emailService");
 const codeSchema_1 = __importDefault(require("../models/codeSchema"));
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await userModel_1.default.find();
+        if (!users)
+            return res.status(404).json({ message: "Users not found" });
+        res.status(200).json(users);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Something went wrong" });
+    }
+};
+exports.getAllUsers = getAllUsers;
 const getUser = async (req, res) => {
     const { id } = req.params;
     try {

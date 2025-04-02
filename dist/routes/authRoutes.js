@@ -11,6 +11,7 @@ const UserControllers_1 = require("../controllers/UserControllers");
 const router = (0, express_1.Router)();
 //Basic auth routes
 router.get("/users/:id", AuthControllers_1.getUser);
+router.get("/users", AuthControllers_1.getAllUsers);
 router.get("/check-withdrawal-password/:userId", PasswordControllers_1.checkWithdrawalPassword);
 router.post("/registration-code", AuthControllers_1.requestVerificationCode);
 router.post("/register", AuthControllers_1.register);

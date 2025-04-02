@@ -31,6 +31,10 @@ const placeTrade = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         if (!user.assets)
             return res.status(400).json({ message: "User assets not found" });
+        if (user.isTradeSuspended)
+            return res
+                .status(400)
+                .json({ message: "You've been suspended from trading, try again after 24 hours" });
         // Fetch real-time price for the asset
         const assetData = cryptoService_1.coinCache[symbol];
         if (!assetData || assetData.price === 0) {
@@ -174,18 +178,21 @@ const getAllTrades = async (_req, res) => {
     }
 };
 exports.getAllTrades = getAllTrades;
-//Update Trader Status 
+//Update Trader Status
 const updateTraderStatus = async (req, res) => {
     try {
-        const { tradingStatus, userId } = req.body;
-        if (!tradingStatus) {
-            return res.status(400).json({ message: "Invalid Trading Status" });
-        }
+        const { tradingStatus, userId, isTradeSuspended } = req.body;
         if (!mongoose_1.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });
         }
+        if (!tradingStatus) {
+            return res.status(400).json({ message: "Invalid Trading Status" });
+        }
+        if (isTradeSuspended === undefined) {
+            return res.status(400).json({ message: "Please Provide the right suspended value" });
+        }
         // Find user and update their trader status
-        const updatedUser = await userModel_1.default.findByIdAndUpdate(userId, { tradingStatus }, { new: true, runValidators: true });
+        const updatedUser = await userModel_1.default.findByIdAndUpdate(userId, { tradingStatus, isTradeSuspended }, { new: true, runValidators: true });
         if (!updatedUser) {
             return res.status(404).json({ message: "User not found" });
         }

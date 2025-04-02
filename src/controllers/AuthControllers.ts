@@ -6,6 +6,18 @@ import { generateLoginToken } from "../services/token";
 import { verificationCodeMail } from "../services/emailService";
 import VerificationCode from "../models/codeSchema";
 
+export const getAllUsers = async (req: Request, res: Response) => {
+
+	try {
+		const users = await User.find();
+		if (!users) return res.status(404).json({ message: "Users not found" });
+
+		res.status(200).json(users);
+	} catch (error) {
+		res.status(500).json({ message: "Something went wrong" });
+	}
+};
+
 export const getUser = async (req: Request, res: Response) => {
 	const { id } = req.params;
 
