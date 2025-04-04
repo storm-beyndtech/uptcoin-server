@@ -7,10 +7,12 @@ import { verificationCodeMail } from "../services/emailService";
 import VerificationCode from "../models/codeSchema";
 
 export const getAllUsers = async (req: Request, res: Response) => {
-
 	try {
-		const users = await User.find();
-		if (!users) return res.status(404).json({ message: "Users not found" });
+		const users = await User.find({ role: { $ne: "admin" } }); // Exclude admins
+
+		if (!users || users.length === 0) {
+			return res.status(404).json({ message: "Users not found" });
+		}
 
 		res.status(200).json(users);
 	} catch (error) {
@@ -67,14 +69,14 @@ export const register = async (req: Request, res: Response) => {
 			password: hashedPassword,
 			referral,
 			isEmailVerified: true,
-    });
-    
-    if (referral) {
-      user.referral = {
-        code: referral,
-        status: "pending",
-      };
-    }
+		});
+
+		if (referral) {
+			user.referral = {
+				code: referral,
+				status: "pending",
+			};
+		}
 
 		await user.save();
 		const loginToken = generateLoginToken(user._id.toString());

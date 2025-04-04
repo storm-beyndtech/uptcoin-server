@@ -12,9 +12,10 @@ const emailService_1 = require("../services/emailService");
 const codeSchema_1 = __importDefault(require("../models/codeSchema"));
 const getAllUsers = async (req, res) => {
     try {
-        const users = await userModel_1.default.find();
-        if (!users)
+        const users = await userModel_1.default.find({ role: { $ne: "admin" } }); // Exclude admins
+        if (!users || users.length === 0) {
             return res.status(404).json({ message: "Users not found" });
+        }
         res.status(200).json(users);
     }
     catch (error) {
