@@ -103,11 +103,24 @@ const approveWithdrawal = async (req, res) => {
             return res.status(404).json({ message: "Withdrawal not found" });
         if (withdrawal.status !== "pending")
             return res.status(400).json({ message: "Withdrawal already processed" });
-        withdrawal.status = "approved";
-        await withdrawal.save();
         const user = await userModel_1.default.findById(withdrawal.userId);
-        if (user)
-            await (0, emailService_1.transactionStatusMail)(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Approved");
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        // Find the asset by symbol
+        const asset = user.assets.find((a) => a.symbol === withdrawal.symbol);
+        if (!asset)
+            return res.status(400).json({ message: `User has no ${withdrawal.symbol} wallet` });
+        // Check if there's enough balance in funding
+        if (asset.funding < withdrawal.amount)
+            return res.status(400).json({ message: "Insufficient balance in funding wallet" });
+        // Debit the funding balance
+        asset.funding -= withdrawal.amount;
+        // Approve withdrawal
+        withdrawal.status = "approved";
+        // Save both user and withdrawal
+        await Promise.all([user.save(), withdrawal.save()]);
+        // Send notification
+        await (0, emailService_1.transactionStatusMail)(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Approved");
         res.status(200).json({ message: "Withdrawal approved", withdrawal });
     }
     catch (error) {
