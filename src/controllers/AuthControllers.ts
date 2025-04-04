@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/userModel";
 import { validateCode } from "../services/codeService";
 import { generateLoginToken } from "../services/token";
-import { verificationCodeMail } from "../services/emailService";
+import { loginAlertMail, verificationCodeMail } from "../services/emailService";
 import VerificationCode from "../models/codeSchema";
 
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -105,9 +105,9 @@ export const addUser = async (req: Request, res: Response) => {
 			email,
 			password: hashedPassword,
 			isEmailVerified: true,
-    });
-    
-    if (referral) {
+		});
+
+		if (referral) {
 			user.referral = {
 				code: referral,
 				status: "pending",
@@ -140,6 +140,9 @@ export const login = async (req: Request, res: Response) => {
 		}
 
 		const loginToken = generateLoginToken(user._id.toString());
+
+		const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress;
+		await loginAlertMail(user.email, ip);
 
 		res.status(200).json({
 			message: "Login successful",

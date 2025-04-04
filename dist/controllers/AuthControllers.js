@@ -131,6 +131,8 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Invalid email or password" });
         }
         const loginToken = (0, token_1.generateLoginToken)(user._id.toString());
+        const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.socket.remoteAddress;
+        await (0, emailService_1.loginAlertMail)(user.email, ip);
         res.status(200).json({
             message: "Login successful",
             token: loginToken,

@@ -45,6 +45,7 @@ const UserSchema = new Schema<IUser>(
 				code: String,
 				status: { type: String, enum: ["claimed", "none", "pending"], default: "none" },
 			},
+			default: () => ({ code: "", status: "none" }),
 		},
 		isEmailVerified: { type: Boolean, default: false },
 		kycStatus: {

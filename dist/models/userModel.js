@@ -36,6 +36,7 @@ const UserSchema = new mongoose_1.Schema({
             code: String,
             status: { type: String, enum: ["claimed", "none", "pending"], default: "none" },
         },
+        default: () => ({ code: "", status: "none" }),
     },
     isEmailVerified: { type: Boolean, default: false },
     kycStatus: {

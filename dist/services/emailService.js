@@ -6,6 +6,7 @@ exports.verificationCodeMail = verificationCodeMail;
 exports.adminTransactionAlert = adminTransactionAlert;
 exports.transactionStatusMail = transactionStatusMail;
 exports.adminMail = adminMail;
+exports.loginAlertMail = loginAlertMail;
 const emailTemplate_1 = require("./emailTemplate");
 const emailConfig_1 = require("./emailConfig");
 const sendMail = (mailData) => {
@@ -52,7 +53,7 @@ async function welcomeMail(userEmail, token) {
             from: `Uptcoin <support@uptcoin.com>`,
             to: userEmail,
             subject: "Welcome to Uptcoin!",
-            html: (0, emailTemplate_1.emailTemplate)("Welcome to Uptcoin", bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         return await sendMailWithRetry(mailOptions);
     }
@@ -75,7 +76,7 @@ async function passwordResetMail(userEmail, resetToken) {
             from: `Uptcoin <support@uptcoin.com>`,
             to: userEmail,
             subject: "Password Reset Request",
-            html: (0, emailTemplate_1.emailTemplate)("Password Reset", bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         return await sendMailWithRetry(mailOptions);
     }
@@ -98,7 +99,7 @@ async function verificationCodeMail(userEmail, verificationCode) {
             from: `Uptcoin <support@uptcoin.com>`,
             to: userEmail,
             subject: "Your Uptcoin Verification Code",
-            html: (0, emailTemplate_1.emailTemplate)("Verification Code", bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         return await sendMailWithRetry(mailOptions);
     }
@@ -121,7 +122,7 @@ async function adminTransactionAlert(userEmail, amount, currency) {
             from: `Uptcoin <support@uptcoin.com>`,
             to: "support@uptcoin.com",
             subject: "Transaction Approval Required",
-            html: (0, emailTemplate_1.emailTemplate)("Transaction Approval Alert", bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         return await sendMailWithRetry(mailOptions);
     }
@@ -141,7 +142,7 @@ async function transactionStatusMail(userEmail, type, amount, currency, status) 
             from: `Uptcoin <support@uptcoin.com>`,
             to: userEmail,
             subject: `${type} ${status}`,
-            html: (0, emailTemplate_1.emailTemplate)(`${type} ${status}`, bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         return await sendMailWithRetry(mailOptions);
     }
@@ -159,7 +160,7 @@ async function adminMail(recipients, subject, bodyContent) {
             from: `Uptcoin Admin`,
             to: recipientList.join(","),
             subject,
-            html: (0, emailTemplate_1.emailTemplate)(subject, bodyContent),
+            html: (0, emailTemplate_1.emailTemplate)(bodyContent),
         };
         // Send email and return the result
         return await sendMailWithRetry(mailOptions);
@@ -167,4 +168,32 @@ async function adminMail(recipients, subject, bodyContent) {
     catch (error) {
         return { error: error instanceof Error && error.message };
     }
+}
+// Login Alert Mail
+async function loginAlertMail(userEmail, ipAddress) {
+    const loginDate = new Date();
+    const formattedDate = loginDate.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+    });
+    const bodyContent = `
+    <td style="padding: 20px; line-height: 1.8;">
+      <p>Hello,</p>
+      <p>Your account was just logged into on <strong>${formattedDate}</strong>${ipAddress ? ` from IP address <strong>${ipAddress}</strong>` : ""}.</p>
+      <p>If this was you, no action is required.</p>
+      <p><strong>If this wasn't you</strong>, please change your password immediately and contact support.</p>
+    </td>
+  `;
+    const mailOptions = {
+        from: `Uptcoin <support@uptcoin.com>`,
+        to: userEmail,
+        subject: `Login Alert - Uptcoin`,
+        html: (0, emailTemplate_1.emailTemplate)(bodyContent),
+    };
+    return await sendMailWithRetry(mailOptions);
 }
