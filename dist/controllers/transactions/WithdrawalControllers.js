@@ -204,7 +204,6 @@ const adminWithdraw = async (req, res) => {
             network,
             fee,
             status: "approved",
-            processedAt: new Date(),
         });
         await withdrawal.save();
         // Send notifications

@@ -48,10 +48,10 @@ exports.addAsset = addAsset;
 // ✅ Update User Asset (e.g., Address)
 const updateAssetAddress = async (req, res) => {
     try {
-        const { userId, symbol, address } = req.body;
+        const { userId, symbol, address, network } = req.body;
         // Validate input
-        if (!userId || !symbol || !address)
-            return res.status(400).json({ message: "User ID, asset symbol, and address are required." });
+        if (!userId || !symbol || !address || !network)
+            return res.status(400).json({ message: "User ID, asset symbol, network and address are required." });
         // Find user
         const user = await userModel_1.default.findById(userId);
         if (!user)
@@ -62,6 +62,7 @@ const updateAssetAddress = async (req, res) => {
             return res.status(404).json({ message: "Asset not found in user account." });
         // Update the address (or any other field)
         asset.address = address;
+        asset.network = network;
         // Save changes
         await user.save();
         res.status(200).json({ message: "Asset updated successfully.", asset });

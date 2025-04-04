@@ -42,8 +42,8 @@ router.post("/admin/withdraw", adminWithdraw);
 router.post("/withdraw", createWithdrawal);
 router.get("/withdrawal/:id", getWithdrawalById);
 router.delete("/cancel/withdrawal/:id", cancelWithdrawal);
-router.put("/withdrawal/approve", approveWithdrawal);
-router.put("/withdrawal/reject", rejectWithdrawal);
+router.put("/withdrawal/approve/:id", approveWithdrawal);
+router.put("/withdrawal/reject/:id", rejectWithdrawal);
 
 //Transfer with account
 router.get("/transfer/:userId", getUserTranfers);

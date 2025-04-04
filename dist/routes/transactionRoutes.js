@@ -20,8 +20,8 @@ router.post("/admin/withdraw", WithdrawalControllers_1.adminWithdraw);
 router.post("/withdraw", WithdrawalControllers_1.createWithdrawal);
 router.get("/withdrawal/:id", WithdrawalControllers_1.getWithdrawalById);
 router.delete("/cancel/withdrawal/:id", WithdrawalControllers_1.cancelWithdrawal);
-router.put("/withdrawal/approve", WithdrawalControllers_1.approveWithdrawal);
-router.put("/withdrawal/reject", WithdrawalControllers_1.rejectWithdrawal);
+router.put("/withdrawal/approve/:id", WithdrawalControllers_1.approveWithdrawal);
+router.put("/withdrawal/reject/:id", WithdrawalControllers_1.rejectWithdrawal);
 //Transfer with account
 router.get("/transfer/:userId", TransferControllers_1.getUserTranfers);
 router.post("/transfer", TransferControllers_1.transferAsset);

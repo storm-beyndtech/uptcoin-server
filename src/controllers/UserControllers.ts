@@ -48,11 +48,11 @@ export const addAsset = async (req: Request, res: Response) => {
 // ✅ Update User Asset (e.g., Address)
 export const updateAssetAddress = async (req: Request, res: Response) => {
 	try {
-		const { userId, symbol, address } = req.body;
+		const { userId, symbol, address, network } = req.body;
 
 		// Validate input
-		if (!userId || !symbol || !address)
-			return res.status(400).json({ message: "User ID, asset symbol, and address are required." });
+		if (!userId || !symbol || !address || !network)
+			return res.status(400).json({ message: "User ID, asset symbol, network and address are required." });
 
 		// Find user
 		const user = await User.findById(userId);
@@ -64,6 +64,7 @@ export const updateAssetAddress = async (req: Request, res: Response) => {
 
 		// Update the address (or any other field)
 		asset.address = address;
+		asset.network = network;
 
 		// Save changes
 		await user.save();
@@ -189,11 +190,11 @@ export const approveKyc = async (req: Request, res: Response) => {
 		const user = await User.findById(userId);
 		if (!user) return res.status(404).json({ message: "User not found" });
 
-    user.kycStatus = "approved";
+		user.kycStatus = "approved";
 		await user.save();
 
 		res.json({ message: "KYC data approved successfully" });
-	} catch (error:any) {
+	} catch (error: any) {
 		console.error(error);
 		res.status(500).json({ message: error.message });
 	}

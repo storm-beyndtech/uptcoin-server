@@ -232,7 +232,6 @@ export const adminWithdraw = async (req: Request, res: Response) => {
 			network,
 			fee,
 			status: "approved",
-			processedAt: new Date(),
 		});
 
 		await withdrawal.save();
