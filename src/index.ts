@@ -8,6 +8,8 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import coinRoutes from "./routes/coinRoutes";
+import adminRoutes from "./routes/adminRoutes";
+
 // Middlewares
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { verifyTransporter } from "./services/emailConfig";
@@ -58,6 +60,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authMiddleware(), authRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api/coins", coinRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Route Not Found Handler
 app.use((req, res) => {

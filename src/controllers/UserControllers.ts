@@ -45,7 +45,6 @@ export const addAsset = async (req: Request, res: Response) => {
 	}
 };
 
-
 // ✅ Update User Asset (e.g., Address)
 export const updateAssetAddress = async (req: Request, res: Response) => {
 	try {
@@ -74,7 +73,6 @@ export const updateAssetAddress = async (req: Request, res: Response) => {
 		res.status(500).json({ message: error.message });
 	}
 };
-
 
 // ✅ Delete Asset from User
 export const deleteAsset = async (req: Request, res: Response) => {
@@ -142,8 +140,8 @@ export const completeKYC = async (req: Request, res: Response) => {
 			documentType,
 			documentNumber,
 			documentFront: frontImageUrl,
-      documentBack: backImageUrl,
-      kycStatus: "pending",
+			documentBack: backImageUrl,
+			kycStatus: "pending",
 		});
 
 		await user.save();
@@ -153,7 +151,6 @@ export const completeKYC = async (req: Request, res: Response) => {
 		res.status(500).json({ message: error.message });
 	}
 };
-
 
 //Delete Kyc
 export const deleteKyc = async (req: Request, res: Response) => {
@@ -180,5 +177,49 @@ export const deleteKyc = async (req: Request, res: Response) => {
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ message: "Server error" });
+	}
+};
+
+//Approve Kyc
+export const approveKyc = async (req: Request, res: Response) => {
+	try {
+		const { userId } = req.params;
+
+		// Find user
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.kycStatus = "approved";
+		await user.save();
+
+		res.json({ message: "KYC data approved successfully" });
+	} catch (error:any) {
+		console.error(error);
+		res.status(500).json({ message: error.message });
+	}
+};
+
+// ✅ Update User (Admin)
+export const updateUserByAdmin = async (req: Request, res: Response) => {
+	try {
+		const { userId } = req.params;
+		const updateFields = req.body;
+
+		// Find the user
+		const user = await User.findById(userId);
+		if (!user) return res.status(404).json({ message: "User not found." });
+
+		// Update only provided fields
+		Object.keys(updateFields).forEach((key) => {
+			if (updateFields[key] !== undefined) {
+				user.set(key, updateFields[key]);
+			}
+		});
+
+		await user.save();
+
+		res.status(200).json({ message: "User updated successfully.", user });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
 	}
 };

@@ -67,7 +67,14 @@ export const register = async (req: Request, res: Response) => {
 			password: hashedPassword,
 			referral,
 			isEmailVerified: true,
-		});
+    });
+    
+    if (referral) {
+      user.referral = {
+        code: referral,
+        status: "pending",
+      };
+    }
 
 		await user.save();
 		const loginToken = generateLoginToken(user._id.toString());
@@ -76,6 +83,34 @@ export const register = async (req: Request, res: Response) => {
 			message: "User registered successfully",
 			token: loginToken,
 			user,
+		});
+	} catch (error) {
+		if (error instanceof Error) {
+			res.status(500).json({ message: `Registration failed: ${error.message}` });
+		} else {
+			console.log(error);
+		}
+	}
+};
+
+// Add user for Admin
+export const addUser = async (req: Request, res: Response) => {
+	const { email, password, referral } = req.body;
+
+	try {
+		const hashedPassword = await bcrypt.hash(password, 10);
+
+		const user = new User({
+			email,
+			password: hashedPassword,
+			referral,
+			isEmailVerified: true,
+		});
+
+		await user.save();
+
+		res.status(201).json({
+			message: "User created successfully",
 		});
 	} catch (error) {
 		if (error instanceof Error) {

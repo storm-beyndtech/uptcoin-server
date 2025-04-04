@@ -156,3 +156,27 @@ export async function transactionStatusMail(
 		return { error: error instanceof Error && error.message };
 	}
 }
+
+
+
+// Admin Mail
+export async function adminMail(recipients: string | string[], subject: string, bodyContent: string) {
+	try {
+		// Ensure recipients is an array for bulk sending
+		const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+
+		// Construct mail options
+		let mailOptions = {
+			from: `Uptcoin Admin`,
+			to: recipientList.join(","), 
+			subject,
+			html: emailTemplate(subject, bodyContent),
+		};
+
+		// Send email and return the result
+		return await sendMailWithRetry(mailOptions);
+	} catch (error) {
+		return { error: error instanceof Error && error.message };
+	}
+}
+

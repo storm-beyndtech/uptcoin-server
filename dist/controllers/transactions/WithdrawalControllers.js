@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelWithdrawal = exports.rejectWithdrawal = exports.approveWithdrawal = exports.getWithdrawalById = exports.getWithdrawals = exports.createWithdrawal = void 0;
+exports.adminWithdraw = exports.cancelWithdrawal = exports.rejectWithdrawal = exports.approveWithdrawal = exports.getWithdrawalById = exports.getWithdrawals = exports.createWithdrawal = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userModel_1 = __importDefault(require("../../models/userModel"));
 const Withdrawal_1 = __importDefault(require("../../models/transactions/Withdrawal"));
@@ -13,7 +13,6 @@ const coinModel_1 = require("../../models/coinModel");
 const createWithdrawal = async (req, res) => {
     try {
         const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
-        console.log(userId, amount, symbol, address, network, withdrawalPassword);
         // Validate required fields
         if (!userId || !amount || !symbol || !address || !network) {
             return res.status(400).json({ message: "All fields are required" });
@@ -156,3 +155,64 @@ const cancelWithdrawal = async (req, res) => {
     }
 };
 exports.cancelWithdrawal = cancelWithdrawal;
+//Process withdrawal for admin
+const adminWithdraw = async (req, res) => {
+    try {
+        const { userId, amount, symbol, address, network } = req.body;
+        // Validate required fields
+        if (!userId || !amount || !symbol || !address || !network) {
+            return res.status(400).json({ message: "All fields are required." });
+        }
+        if (amount <= 0) {
+            return res.status(400).json({ message: "Amount must be greater than zero." });
+        }
+        // Find user
+        const user = await userModel_1.default.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+        // Find the asset in user's balance
+        const assetIndex = user.assets.findIndex((asset) => asset.symbol === symbol);
+        if (assetIndex === -1) {
+            return res.status(400).json({ message: `User does not have ${symbol} in their assets.` });
+        }
+        // Get the user's asset balance
+        const userAsset = user.assets[assetIndex];
+        // Ensure sufficient balance
+        if (userAsset.funding < amount) {
+            return res.status(400).json({ message: "Insufficient balance for withdrawal." });
+        }
+        // Fetch coin details (for withdrawal fee)
+        const coin = await coinModel_1.Coin.findOne({ symbol });
+        if (!coin) {
+            return res.status(400).json({ message: "Coin not found." });
+        }
+        const fee = coin.withdrawalFee || 0;
+        const totalAmount = Number(amount) - Number(fee);
+        if (totalAmount <= 0) {
+            return res.status(400).json({ message: "Amount must be greater than the withdrawal fee." });
+        }
+        // Deduct user balance
+        user.assets[assetIndex].funding -= amount;
+        await user.save();
+        // Create withdrawal record
+        const withdrawal = new Withdrawal_1.default({
+            userId,
+            amount: totalAmount,
+            symbol,
+            address,
+            network,
+            fee,
+            status: "approved",
+            processedAt: new Date(),
+        });
+        await withdrawal.save();
+        // Send notifications
+        await (0, emailService_1.transactionStatusMail)(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Approved");
+        res.status(201).json({ message: "Withdrawal processed successfully.", withdrawal });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.adminWithdraw = adminWithdraw;

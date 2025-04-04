@@ -5,6 +5,7 @@ exports.passwordResetMail = passwordResetMail;
 exports.verificationCodeMail = verificationCodeMail;
 exports.adminTransactionAlert = adminTransactionAlert;
 exports.transactionStatusMail = transactionStatusMail;
+exports.adminMail = adminMail;
 const emailTemplate_1 = require("./emailTemplate");
 const emailConfig_1 = require("./emailConfig");
 const sendMail = (mailData) => {
@@ -142,6 +143,25 @@ async function transactionStatusMail(userEmail, type, amount, currency, status) 
             subject: `${type} ${status}`,
             html: (0, emailTemplate_1.emailTemplate)(`${type} ${status}`, bodyContent),
         };
+        return await sendMailWithRetry(mailOptions);
+    }
+    catch (error) {
+        return { error: error instanceof Error && error.message };
+    }
+}
+// Admin Mail
+async function adminMail(recipients, subject, bodyContent) {
+    try {
+        // Ensure recipients is an array for bulk sending
+        const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+        // Construct mail options
+        let mailOptions = {
+            from: `Uptcoin Admin`,
+            to: recipientList.join(","),
+            subject,
+            html: (0, emailTemplate_1.emailTemplate)(subject, bodyContent),
+        };
+        // Send email and return the result
         return await sendMailWithRetry(mailOptions);
     }
     catch (error) {

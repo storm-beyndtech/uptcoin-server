@@ -13,6 +13,7 @@ const cors_1 = __importDefault(require("cors"));
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/transactionRoutes"));
 const coinRoutes_1 = __importDefault(require("./routes/coinRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 // Middlewares
 const authMiddleware_1 = require("./middlewares/authMiddleware");
 const emailConfig_1 = require("./services/emailConfig");
@@ -54,6 +55,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", (0, authMiddleware_1.authMiddleware)(), authRoutes_1.default);
 app.use("/api/transaction", transactionRoutes_1.default);
 app.use("/api/coins", coinRoutes_1.default);
+app.use("/api/admin", adminRoutes_1.default);
 // Route Not Found Handler
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });

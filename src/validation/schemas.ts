@@ -15,7 +15,10 @@ export const userValidationSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(6, "Password must be at least 6 characters"),
 	withdrawalPassword: z.string().min(6, "Password must be at least 6 characters"),
-	referral: z.string().optional(),
+	referral: z.object({
+		code: z.string(),
+		status: z.enum(["claimed", "none", "pending"]).default("none"),
+	}),
 	isEmailVerified: z.boolean().default(false),
 	kycStatus: z.string(),
 
@@ -40,7 +43,8 @@ export const userValidationSchema = z.object({
 		}),
 	),
 
-	disabled: z.boolean().default(false),
+	accountStatus: z.string(),
+	role: z.string(),
 });
 
 // Infer TypeScript Type for Mongoose

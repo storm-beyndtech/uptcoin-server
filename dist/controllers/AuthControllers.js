@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.login = exports.register = exports.requestVerificationCode = exports.getUser = exports.getAllUsers = void 0;
+exports.login = exports.addUser = exports.register = exports.requestVerificationCode = exports.getUser = exports.getAllUsers = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userModel_1 = __importDefault(require("../models/userModel"));
 const codeService_1 = require("../services/codeService");
@@ -67,6 +67,12 @@ const register = async (req, res) => {
             referral,
             isEmailVerified: true,
         });
+        if (referral) {
+            user.referral = {
+                code: referral,
+                status: "pending",
+            };
+        }
         await user.save();
         const loginToken = (0, token_1.generateLoginToken)(user._id.toString());
         res.status(201).json({
@@ -85,6 +91,32 @@ const register = async (req, res) => {
     }
 };
 exports.register = register;
+// Add user for Admin
+const addUser = async (req, res) => {
+    const { email, password, referral } = req.body;
+    try {
+        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+        const user = new userModel_1.default({
+            email,
+            password: hashedPassword,
+            referral,
+            isEmailVerified: true,
+        });
+        await user.save();
+        res.status(201).json({
+            message: "User created successfully",
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            res.status(500).json({ message: `Registration failed: ${error.message}` });
+        }
+        else {
+            console.log(error);
+        }
+    }
+};
+exports.addUser = addUser;
 // Login Controller
 const login = async (req, res) => {
     const { email, password } = req.body;

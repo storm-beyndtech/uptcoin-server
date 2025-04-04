@@ -11,11 +11,12 @@ const router = (0, express_1.Router)();
 router.post("/deposit", DepositControllers_1.createDeposit);
 router.get("/deposits", DepositControllers_1.getDeposits);
 router.get("/deposit/:id", DepositControllers_1.getDepositById);
-router.put("/deposit/approve", DepositControllers_1.approveDeposit);
-router.put("/deposit/reject", DepositControllers_1.rejectDeposit);
+router.put("/deposit/approve/:id", DepositControllers_1.approveDeposit);
+router.put("/deposit/reject/:id", DepositControllers_1.rejectDeposit);
 router.delete("/deposit/:id/cancel", DepositControllers_1.cancelDeposit);
 //Withdrawal Routes
 router.get("/withdrawals", WithdrawalControllers_1.getWithdrawals);
+router.post("/admin/withdraw", WithdrawalControllers_1.adminWithdraw);
 router.post("/withdraw", WithdrawalControllers_1.createWithdrawal);
 router.get("/withdrawal/:id", WithdrawalControllers_1.getWithdrawalById);
 router.delete("/cancel/withdrawal/:id", WithdrawalControllers_1.cancelWithdrawal);

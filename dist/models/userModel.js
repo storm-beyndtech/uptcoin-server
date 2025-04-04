@@ -4,7 +4,15 @@ const mongoose_1 = require("mongoose");
 // Default assets with zero balances
 const defaultAssets = [
     { symbol: "BTC", funding: 0, spot: 0, name: "Bitcoin", address: "", network: "BTC", status: "activated" },
-    { symbol: "ETH", funding: 0, spot: 0, name: "Ethereum", address: "", network: "ERC20", status: "activated" },
+    {
+        symbol: "ETH",
+        funding: 0,
+        spot: 0,
+        name: "Ethereum",
+        address: "",
+        network: "ERC20",
+        status: "activated",
+    },
     { symbol: "USDT", funding: 0, spot: 0, name: "Tether", address: "", network: "ERC20", status: "activated" },
     { symbol: "ATOM", funding: 0, spot: 0, name: "Cosmos", address: "", network: "ATOM", status: "activated" },
     { symbol: "SOL", funding: 0, spot: 0, name: "Solana", address: "", network: "SOL", status: "activated" },
@@ -23,7 +31,12 @@ const UserSchema = new mongoose_1.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     withdrawalPassword: { type: String },
-    referral: { type: String },
+    referral: {
+        type: {
+            code: String,
+            status: { type: String, enum: ["claimed", "none", "pending"], default: "none" },
+        },
+    },
     isEmailVerified: { type: Boolean, default: false },
     kycStatus: {
         type: String,
@@ -52,8 +65,13 @@ const UserSchema = new mongoose_1.Schema({
         ],
         default: defaultAssets,
     },
-    uid: { type: String, unique: true }, // ✅ Short Unique ID
-    disabled: { type: Boolean, default: false },
+    uid: { type: String, unique: true },
+    role: {
+        type: String,
+        enum: ["user", "admin"],
+        default: "user",
+    },
+    accountStatus: { type: String, enum: ["active", "suspended", "deactivated"], default: "active" },
 }, { timestamps: true });
 // ✅ Generate Short UID before saving a new user
 UserSchema.pre("save", async function (next) {

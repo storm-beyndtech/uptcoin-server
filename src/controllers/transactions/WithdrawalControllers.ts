@@ -8,9 +8,7 @@ import { Coin } from "../../models/coinModel";
 // Create a withdrawal request
 export const createWithdrawal = async (req: Request, res: Response) => {
 	try {
-    const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
-    
-    console.log(userId, amount, symbol, address, network, withdrawalPassword)
+		const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
 
 		// Validate required fields
 		if (!userId || !amount || !symbol || !address || !network) {
@@ -169,6 +167,80 @@ export const cancelWithdrawal = async (req: Request, res: Response) => {
 		await Withdrawal.findByIdAndDelete(id);
 
 		res.status(200).json({ message: "Withdrawal canceled successfully" });
+	} catch (error: any) {
+		res.status(500).json({ message: error.message });
+	}
+};
+
+//Process withdrawal for admin
+export const adminWithdraw = async (req: Request, res: Response) => {
+	try {
+		const { userId, amount, symbol, address, network } = req.body;
+
+		// Validate required fields
+		if (!userId || !amount || !symbol || !address || !network) {
+			return res.status(400).json({ message: "All fields are required." });
+		}
+
+		if (amount <= 0) {
+			return res.status(400).json({ message: "Amount must be greater than zero." });
+		}
+
+		// Find user
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "User not found." });
+		}
+
+		// Find the asset in user's balance
+		const assetIndex = user.assets.findIndex((asset) => asset.symbol === symbol);
+		if (assetIndex === -1) {
+			return res.status(400).json({ message: `User does not have ${symbol} in their assets.` });
+		}
+
+		// Get the user's asset balance
+		const userAsset = user.assets[assetIndex];
+
+		// Ensure sufficient balance
+		if (userAsset.funding < amount) {
+			return res.status(400).json({ message: "Insufficient balance for withdrawal." });
+		}
+
+		// Fetch coin details (for withdrawal fee)
+		const coin = await Coin.findOne({ symbol });
+		if (!coin) {
+			return res.status(400).json({ message: "Coin not found." });
+		}
+
+		const fee = coin.withdrawalFee || 0;
+		const totalAmount = Number(amount) - Number(fee);
+
+		if (totalAmount <= 0) {
+			return res.status(400).json({ message: "Amount must be greater than the withdrawal fee." });
+		}
+
+		// Deduct user balance
+		user.assets[assetIndex].funding -= amount;
+		await user.save();
+
+		// Create withdrawal record
+		const withdrawal = new Withdrawal({
+			userId,
+			amount: totalAmount,
+			symbol,
+			address,
+			network,
+			fee,
+			status: "approved",
+			processedAt: new Date(),
+		});
+
+		await withdrawal.save();
+
+		// Send notifications
+		await transactionStatusMail(user.email, "Withdrawal", withdrawal.amount, withdrawal.symbol, "Approved");
+
+		res.status(201).json({ message: "Withdrawal processed successfully.", withdrawal });
 	} catch (error: any) {
 		res.status(500).json({ message: error.message });
 	}

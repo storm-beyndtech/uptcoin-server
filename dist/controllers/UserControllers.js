@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteKyc = exports.completeKYC = exports.deleteAsset = exports.updateAssetAddress = exports.addAsset = void 0;
+exports.updateUserByAdmin = exports.approveKyc = exports.deleteKyc = exports.completeKYC = exports.deleteAsset = exports.updateAssetAddress = exports.addAsset = void 0;
 const userModel_1 = __importDefault(require("../models/userModel"));
 const coinModel_1 = require("../models/coinModel");
 const uploadHelper_1 = require("../utils/uploadHelper");
@@ -164,3 +164,44 @@ const deleteKyc = async (req, res) => {
     }
 };
 exports.deleteKyc = deleteKyc;
+//Approve Kyc
+const approveKyc = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        // Find user
+        const user = await userModel_1.default.findById(userId);
+        if (!user)
+            return res.status(404).json({ message: "User not found" });
+        user.kycStatus = "approved";
+        await user.save();
+        res.json({ message: "KYC data approved successfully" });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.approveKyc = approveKyc;
+// ✅ Update User (Admin)
+const updateUserByAdmin = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const updateFields = req.body;
+        // Find the user
+        const user = await userModel_1.default.findById(userId);
+        if (!user)
+            return res.status(404).json({ message: "User not found." });
+        // Update only provided fields
+        Object.keys(updateFields).forEach((key) => {
+            if (updateFields[key] !== undefined) {
+                user.set(key, updateFields[key]);
+            }
+        });
+        await user.save();
+        res.status(200).json({ message: "User updated successfully.", user });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+exports.updateUserByAdmin = updateUserByAdmin;

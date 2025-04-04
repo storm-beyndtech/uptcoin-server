@@ -16,7 +16,10 @@ exports.userValidationSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
     password: zod_1.z.string().min(6, "Password must be at least 6 characters"),
     withdrawalPassword: zod_1.z.string().min(6, "Password must be at least 6 characters"),
-    referral: zod_1.z.string().optional(),
+    referral: zod_1.z.object({
+        code: zod_1.z.string(),
+        status: zod_1.z.enum(["claimed", "none", "pending"]).default("none"),
+    }),
     isEmailVerified: zod_1.z.boolean().default(false),
     kycStatus: zod_1.z.string(),
     tradingStatus: zod_1.z.string().optional(),
@@ -36,5 +39,6 @@ exports.userValidationSchema = zod_1.z.object({
         network: zod_1.z.string(),
         status: zod_1.z.string(),
     })),
-    disabled: zod_1.z.boolean().default(false),
+    accountStatus: zod_1.z.string(),
+    role: zod_1.z.string(),
 });

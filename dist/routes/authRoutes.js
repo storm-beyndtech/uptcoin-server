@@ -15,7 +15,9 @@ router.get("/users", AuthControllers_1.getAllUsers);
 router.get("/check-withdrawal-password/:userId", PasswordControllers_1.checkWithdrawalPassword);
 router.post("/registration-code", AuthControllers_1.requestVerificationCode);
 router.post("/register", AuthControllers_1.register);
+router.post("/add-user", AuthControllers_1.addUser);
 router.post("/login", AuthControllers_1.login);
+router.put("/update-user/:userId", UserControllers_1.updateUserByAdmin);
 //Password routes
 router.post("/reset-password-code", PasswordControllers_1.requestResetCode);
 router.put("/reset-password", PasswordControllers_1.resetPassword);
@@ -25,6 +27,7 @@ router.put("/set-withdrawal-password", PasswordControllers_1.setWithdrawalPasswo
 router.post("/add-asset", UserControllers_1.addAsset);
 router.put("/update-asset-address", UserControllers_1.updateAssetAddress);
 router.delete("/delete-asset", UserControllers_1.deleteAsset);
-router.delete("/delete-kyc/:userId", UserControllers_1.deleteKyc);
+router.put("/reject-kyc/:userId", UserControllers_1.deleteKyc);
+router.put("/approve-kyc/:userId", UserControllers_1.approveKyc);
 router.put("/complete-kyc", multer_1.default.fields([{ name: "documentFront" }, { name: "documentBack" }]), UserControllers_1.completeKYC);
 exports.default = router;
