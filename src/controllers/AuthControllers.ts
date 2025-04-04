@@ -67,7 +67,6 @@ export const register = async (req: Request, res: Response) => {
 		const user = new User({
 			email,
 			password: hashedPassword,
-			referral,
 			isEmailVerified: true,
 		});
 
@@ -105,9 +104,15 @@ export const addUser = async (req: Request, res: Response) => {
 		const user = new User({
 			email,
 			password: hashedPassword,
-			referral,
 			isEmailVerified: true,
-		});
+    });
+    
+    if (referral) {
+			user.referral = {
+				code: referral,
+				status: "pending",
+			};
+		}
 
 		await user.save();
 

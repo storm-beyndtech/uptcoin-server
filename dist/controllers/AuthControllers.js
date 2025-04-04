@@ -65,7 +65,6 @@ const register = async (req, res) => {
         const user = new userModel_1.default({
             email,
             password: hashedPassword,
-            referral,
             isEmailVerified: true,
         });
         if (referral) {
@@ -100,9 +99,14 @@ const addUser = async (req, res) => {
         const user = new userModel_1.default({
             email,
             password: hashedPassword,
-            referral,
             isEmailVerified: true,
         });
+        if (referral) {
+            user.referral = {
+                code: referral,
+                status: "pending",
+            };
+        }
         await user.save();
         res.status(201).json({
             message: "User created successfully",
