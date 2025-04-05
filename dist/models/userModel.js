@@ -13,7 +13,7 @@ const defaultAssets = [
         network: "ERC20",
         status: "activated",
     },
-    { symbol: "USDT", funding: 0, spot: 0, name: "Tether", address: "", network: "ERC20", status: "activated" },
+    { symbol: "USDT", funding: 0, spot: 0, name: "Tether", address: "", network: "BEP20", status: "activated" },
     { symbol: "ATOM", funding: 0, spot: 0, name: "Cosmos", address: "", network: "ATOM", status: "activated" },
     { symbol: "SOL", funding: 0, spot: 0, name: "Solana", address: "", network: "SOL", status: "activated" },
 ];

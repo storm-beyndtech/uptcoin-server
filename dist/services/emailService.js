@@ -45,8 +45,7 @@ async function welcomeMail(userEmail, token) {
         <p>We're thrilled to have you as part of our community. At Uptcoin, we are dedicated to providing the best services and support to our users.</p>
         <p>Click the link below to verify your email address:</p>
         <a href="${verificationLink}">${verificationLink}</a>
-        <p>Best regards,</p>
-        <p>The Uptcoin Team</p>
+      <p>Best regards,<br />The Uptcoin Team</p>
       </td>
     `;
         let mailOptions = {
@@ -70,6 +69,7 @@ async function passwordResetMail(userEmail, resetToken) {
         <p>A request was sent for a password reset. If this wasn't you, please contact our customer service.</p>
         <p>Click the reset link below to proceed:</p>
         <a href="${resetLink}" style="display: inline-block; padding: 15px 30px; border-radius: 30px; background-color: #114000; color: #fafafa; text-decoration: none;">Reset Password</a>
+      <p>Best regards,<br />The Uptcoin Team</p>
       </td>
     `;
         let mailOptions = {
@@ -92,7 +92,9 @@ async function verificationCodeMail(userEmail, verificationCode) {
         <p>Use the code below to complete your registration:</p>
         <h2 style="text-align: center; font-size: 24px;">${verificationCode}</h2>
         <p>This code will expire in 10 minutes.</p>
-        <p>If you didn’t request this, please ignore this email.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+
+      <p>Best regards,<br />The Uptcoin Team</p>
       </td>
     `;
         let mailOptions = {
@@ -134,10 +136,20 @@ async function adminTransactionAlert(userEmail, amount, currency) {
 async function transactionStatusMail(userEmail, type, amount, currency, status) {
     try {
         let bodyContent = `
-      <td style="padding: 20px; line-height: 1.8;">
-        <p>Your ${type} of <b>${amount} ${currency}</b> has been ${status}.</p>
-      </td>
-    `;
+    <td style="padding: 20px; line-height: 1.8; font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+      <p>Dear Customer,</p>
+  
+      <p>We would like to inform you that your <strong>${type.toLowerCase()}</strong> request for <strong>${amount} ${currency}</strong> has been <strong>${status.toLowerCase()}</strong>.</p>
+  
+      <p>If you initiated this transaction, no further action is required.</p>
+  
+      <p>If you did <strong>not</strong> authorize this request or believe this was done in error, please contact our support team immediately.</p>
+  
+      <p>Thank you for choosing Uptcoin.</p>
+  
+      <p>Best regards,<br />The Uptcoin Team</p>
+    </td>
+  `;
         let mailOptions = {
             from: `Uptcoin <support@uptcoin.com>`,
             to: userEmail,
