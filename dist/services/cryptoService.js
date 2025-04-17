@@ -13,22 +13,18 @@ let ws;
 exports.coinCache = {};
 const startCryptoWebSocket = async () => {
     try {
-        // Fetch available coins from the database
         const coins = await coinModel_1.Coin.find({});
-        const subscribedCoins = coins.map(({ symbol, margin, address, network, withdrawalFee, conversionFee }) => {
-            return {
-                symbol,
-                margin,
-                address,
-                network,
-                withdrawalFee,
-                conversionFee,
-            };
-        });
+        const subscribedCoins = coins.map(({ symbol, margin, address, network, withdrawalFee, conversionFee }) => ({
+            symbol,
+            margin,
+            address,
+            network,
+            withdrawalFee,
+            conversionFee,
+        }));
         if (subscribedCoins.length === 0)
             return console.error("No coins available in the database.");
         ws = new ws_1.default(CRYPTOCOMPARE_WS_URL);
-        //Subscribe to CC
         ws.on("open", () => {
             console.log("Connected to CryptoCompare WebSocket");
             const subRequest = {
@@ -37,23 +33,18 @@ const startCryptoWebSocket = async () => {
             };
             ws.send(JSON.stringify(subRequest));
         });
-        //Extract Data from CC and send to clients
         ws.on("message", (data) => {
             try {
                 const parsedData = JSON.parse(data.toString());
-                // Extract relevant fields
                 const { TYPE, FROMSYMBOL, PRICE, OPEN24HOUR, LOW24HOUR, HIGH24HOUR, VOLUME24HOURTO } = parsedData;
-                // Filter out irrelevant messages
                 if (TYPE !== "5")
                     return;
-                // Check if the coin is valid and avoid sending 0 values
                 if (!FROMSYMBOL || (!PRICE && !exports.coinCache[FROMSYMBOL]))
                     return;
-                // Find the corresponding coin details
                 const coinInfo = coins.find((coin) => coin.symbol === FROMSYMBOL);
                 const coinName = coinInfo ? coinInfo.name : FROMSYMBOL;
                 const coinID = coinInfo ? coinInfo._id : FROMSYMBOL;
-                //Initialize USDT first
+                // Initialize USDT once
                 if (!exports.coinCache["USDT"]) {
                     const usdt = coins.find((coin) => coin.symbol === "USDT");
                     exports.coinCache["USDT"] = {
@@ -67,15 +58,15 @@ const startCryptoWebSocket = async () => {
                         volume: 0,
                         time: Date.now(),
                         image: "https://assets.coincap.io/assets/icons/tether2@2x.png",
-                        address: usdt ? usdt.address : "",
+                        address: usdt?.address || "",
                         network: "Ethereum (ERC20)",
-                        withdrawalFee: usdt ? usdt.withdrawalFee : 0,
-                        conversionFee: usdt ? usdt.conversionFee : 0,
-                        minDeposit: usdt ? usdt.minDeposit : 0,
-                        minWithdraw: usdt ? usdt.minWithdraw : 0,
+                        withdrawalFee: usdt?.withdrawalFee || 0,
+                        conversionFee: usdt?.conversionFee || 0,
+                        minDeposit: usdt?.minDeposit || 0,
+                        minWithdraw: usdt?.minWithdraw || 0,
                     };
                 }
-                // Initialize cache if not already set
+                // Initialize coin cache if missing
                 if (!exports.coinCache[FROMSYMBOL]) {
                     exports.coinCache[FROMSYMBOL] = {
                         id: coinID,
@@ -88,15 +79,15 @@ const startCryptoWebSocket = async () => {
                         volume: 0,
                         time: Date.now(),
                         image: `https://assets.coincap.io/assets/icons/${FROMSYMBOL.toLowerCase()}@2x.png`,
-                        address: coinInfo ? coinInfo.address : "",
-                        network: coinInfo ? coinInfo.network : "",
-                        withdrawalFee: coinInfo ? coinInfo.withdrawalFee : 0,
-                        conversionFee: coinInfo ? coinInfo.conversionFee : 0,
-                        minDeposit: coinInfo ? coinInfo.minDeposit : 0,
-                        minWithdraw: coinInfo ? coinInfo.minWithdraw : 0,
+                        address: coinInfo?.address || "",
+                        network: coinInfo?.network || "",
+                        withdrawalFee: coinInfo?.withdrawalFee || 0,
+                        conversionFee: coinInfo?.conversionFee || 0,
+                        minDeposit: coinInfo?.minDeposit || 0,
+                        minWithdraw: coinInfo?.minWithdraw || 0,
                     };
                 }
-                // Update only the available fields
+                // Update live data
                 if (PRICE) {
                     exports.coinCache[FROMSYMBOL].price = coinInfo ? PRICE * (1 + coinInfo.margin / 100) : PRICE;
                     exports.coinCache[FROMSYMBOL].time = Date.now();
@@ -110,22 +101,20 @@ const startCryptoWebSocket = async () => {
                     exports.coinCache[FROMSYMBOL].high = HIGH24HOUR;
                 if (VOLUME24HOURTO)
                     exports.coinCache[FROMSYMBOL].volume = VOLUME24HOURTO;
-                // console.log(coinCache)
                 (0, tradeEngine_1.handlePriceUpdate)({ symbol: FROMSYMBOL, price: PRICE });
-                // Broadcast update to all connected clients
+                // Broadcast to frontend clients
                 clients.forEach((client) => {
                     if (client.readyState === ws_1.default.OPEN) {
-                        // Send the received coin update first
                         client.send(JSON.stringify(exports.coinCache[FROMSYMBOL]));
-                        // Also send USDT separately
-                        if (exports.coinCache["USDT"]) {
+                        // Also send USDT if it's not the same coin
+                        if (FROMSYMBOL !== "USDT" && exports.coinCache["USDT"]) {
                             client.send(JSON.stringify(exports.coinCache["USDT"]));
                         }
                     }
                 });
             }
             catch (error) {
-                console.error("Error Processing WebSocket Message:", error);
+                console.error("Error processing WebSocket message:", error);
             }
         });
         ws.on("close", (code, reason) => {
@@ -137,11 +126,11 @@ const startCryptoWebSocket = async () => {
         });
     }
     catch (error) {
-        console.error("Error fetching coins from database:", error);
+        console.error("Error initializing Crypto WebSocket:", error);
     }
 };
 exports.startCryptoWebSocket = startCryptoWebSocket;
-// WebSocket Server for Frontend
+// WebSocket Server for frontend
 const handleCryptoWebSocket = (server) => {
     const wss = new ws_1.default.Server({ server });
     wss.on("connection", (ws) => {
