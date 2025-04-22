@@ -1,40 +1,110 @@
 import WebSocket from "ws";
-import { Server } from "http";
 import { Coin } from "../models/coinModel";
 import { handlePriceUpdate } from "./tradeEngine";
+import { Server } from "http";
 
 const CRYPTOCOMPARE_WS_URL = `wss://streamer.cryptocompare.com/v2?api_key=${process.env.CRYPTOCOMPARE_API_KEY}`;
 const clients = new Set<WebSocket>();
-let ws: WebSocket;
+let ws: WebSocket | null = null;
+let reconnectAttempts = 0;
+let heartbeatInterval: NodeJS.Timeout | null = null;
+let heartbeatTimeout: NodeJS.Timeout | null = null;
 
 export const coinCache: Record<string, any> = {};
 
+const getSubscribedCoins = async () => {
+	const coins = await Coin.find({});
+	return coins.map(
+		({
+			symbol,
+			margin,
+			address,
+			network,
+			withdrawalFee,
+			conversionFee,
+			minDeposit,
+			minWithdraw,
+			name,
+			_id,
+		}) => ({
+			symbol,
+			margin,
+			address,
+			network,
+			withdrawalFee,
+			conversionFee,
+			minDeposit,
+			minWithdraw,
+			name,
+			_id,
+		}),
+	);
+};
+
+const subscribeToCoins = (subscribedCoins: any[]) => {
+	if (ws && ws.readyState === WebSocket.OPEN) {
+		const subRequest = {
+			action: "SubAdd",
+			subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin.symbol}~USDT`),
+		};
+		ws.send(JSON.stringify(subRequest));
+	}
+};
+
+const setupHeartbeat = () => {
+	if (heartbeatInterval) clearInterval(heartbeatInterval);
+	if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
+
+	heartbeatInterval = setInterval(() => {
+		if (ws && ws.readyState === WebSocket.OPEN) {
+			console.log("Sending ping...");
+			ws.ping();
+			heartbeatTimeout = setTimeout(() => {
+				console.warn("Heartbeat timeout. Terminating connection.");
+				ws?.terminate();
+			}, 10000); // Wait 10 seconds for pong
+		}
+	}, 30000); // Send ping every 30 seconds
+};
+
+const cleanup = () => {
+	if (heartbeatInterval) clearInterval(heartbeatInterval);
+	if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
+	heartbeatInterval = null;
+	heartbeatTimeout = null;
+};
+
+const reconnect = async () => {
+	cleanup();
+	reconnectAttempts++;
+	const delay = Math.min(10000, 1000 * reconnectAttempts); // exponential backoff
+	console.log(`Reconnecting in ${delay / 1000}s...`);
+	setTimeout(() => {
+		startCryptoWebSocket(); // attempt reconnection
+	}, delay);
+};
+
 export const startCryptoWebSocket = async () => {
 	try {
-		const coins = await Coin.find({});
-		const subscribedCoins = coins.map(
-			({ symbol, margin, address, network, withdrawalFee, conversionFee }) => ({
-				symbol,
-				margin,
-				address,
-				network,
-				withdrawalFee,
-				conversionFee,
-			}),
-		);
+		const subscribedCoins = await getSubscribedCoins();
 
-		if (subscribedCoins.length === 0) return console.error("No coins available in the database.");
+		if (subscribedCoins.length === 0) {
+			console.error("No coins found in the database to subscribe to.");
+			return;
+		}
+
+		if (ws) {
+			ws.removeAllListeners();
+			ws.terminate();
+		}
 
 		ws = new WebSocket(CRYPTOCOMPARE_WS_URL);
 
 		ws.on("open", () => {
-			console.log("Connected to CryptoCompare WebSocket");
-
-			const subRequest = {
-				action: "SubAdd",
-				subs: subscribedCoins.map((coin) => `5~CCCAGG~${coin.symbol}~USDT`),
-			};
-			ws.send(JSON.stringify(subRequest));
+			console.log("✅ Connected to CryptoCompare WebSocket");
+			reconnectAttempts = 0;
+			subscribeToCoins(subscribedCoins);
+			setupHeartbeat();
 		});
 
 		ws.on("message", (data: WebSocket.RawData) => {
@@ -45,15 +115,14 @@ export const startCryptoWebSocket = async () => {
 				if (TYPE !== "5") return;
 				if (!FROMSYMBOL || (!PRICE && !coinCache[FROMSYMBOL])) return;
 
-				const coinInfo = coins.find((coin) => coin.symbol === FROMSYMBOL);
-				const coinName = coinInfo ? coinInfo.name : FROMSYMBOL;
-				const coinID = coinInfo ? coinInfo._id : FROMSYMBOL;
+				const coinInfo = subscribedCoins.find((coin) => coin.symbol === FROMSYMBOL);
+				const coinName = coinInfo?.name || FROMSYMBOL;
+				const coinID = coinInfo?._id || FROMSYMBOL;
 
-				// Initialize USDT once
 				if (!coinCache["USDT"]) {
-					const usdt = coins.find((coin) => coin.symbol === "USDT");
+					const usdt = subscribedCoins.find((coin) => coin.symbol === "USDT");
 					coinCache["USDT"] = {
-						id: usdt ? usdt._id : "tether",
+						id: usdt?._id || "tether",
 						name: "Tether",
 						symbol: "USDT",
 						price: 1.0,
@@ -72,7 +141,6 @@ export const startCryptoWebSocket = async () => {
 					};
 				}
 
-				// Initialize coin cache if missing
 				if (!coinCache[FROMSYMBOL]) {
 					coinCache[FROMSYMBOL] = {
 						id: coinID,
@@ -94,7 +162,6 @@ export const startCryptoWebSocket = async () => {
 					};
 				}
 
-				// Update live data
 				if (PRICE) {
 					coinCache[FROMSYMBOL].price = coinInfo ? PRICE * (1 + coinInfo.margin / 100) : PRICE;
 					coinCache[FROMSYMBOL].time = Date.now();
@@ -108,32 +175,34 @@ export const startCryptoWebSocket = async () => {
 
 				handlePriceUpdate({ symbol: FROMSYMBOL, price: PRICE });
 
-				// Broadcast to frontend clients
 				clients.forEach((client) => {
 					if (client.readyState === WebSocket.OPEN) {
 						client.send(JSON.stringify(coinCache[FROMSYMBOL]));
-
-						// Also send USDT if it's not the same coin
 						if (FROMSYMBOL !== "USDT" && coinCache["USDT"]) {
 							client.send(JSON.stringify(coinCache["USDT"]));
 						}
 					}
 				});
 			} catch (error) {
-				console.error("Error processing WebSocket message:", error);
+				console.error("Error processing message:", error);
 			}
 		});
 
-		ws.on("close", (code, reason) => {
-			console.log(`CryptoCompare WebSocket closed: Code ${code}, Reason: ${reason}`);
-			setTimeout(startCryptoWebSocket, 10000);
+		ws.on("pong", () => {
+			if (heartbeatTimeout) clearTimeout(heartbeatTimeout);
 		});
 
-		ws.on("error", (error) => {
-			console.error("CryptoCompare WebSocket error:", error);
+		ws.on("error", (err) => {
+			console.error("❌ WebSocket error:", err.message);
 		});
-	} catch (error) {
-		console.error("Error initializing Crypto WebSocket:", error);
+
+		ws.on("close", (code, reason) => {
+			console.warn(`⚠️ WebSocket closed: ${code} - ${reason.toString()}`);
+			reconnect();
+		});
+	} catch (err) {
+		console.error("Failed to start Crypto WebSocket:", err);
+		reconnect();
 	}
 };
 
