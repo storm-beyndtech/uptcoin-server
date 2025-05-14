@@ -170,7 +170,7 @@ export const startCryptoWebSocket = async () => {
 					coinCache[FROMSYMBOL].change = ((PRICE - OPEN24HOUR) / OPEN24HOUR) * 100;
 				}
 				if (LOW24HOUR) coinCache[FROMSYMBOL].low = LOW24HOUR;
-				if (HIGH24HOUR) coinCache[FROMSYMBOL].high = HIGH24HOUR;
+				if (HIGH24HOUR) coinCache[FROMSYMBOL].high =  coinInfo ? HIGH24HOUR * (1 + coinInfo.margin / 100) : HIGH24HOUR;
 				if (VOLUME24HOURTO) coinCache[FROMSYMBOL].volume = VOLUME24HOURTO;
 
 				handlePriceUpdate({ symbol: FROMSYMBOL, price: PRICE });
