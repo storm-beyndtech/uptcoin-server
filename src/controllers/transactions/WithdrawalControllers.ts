@@ -8,7 +8,7 @@ import { Coin } from "../../models/coinModel";
 // Create a withdrawal request
 export const createWithdrawal = async (req: Request, res: Response) => {
 	try {
-		const { userId, amount, symbol, address, network, withdrawalPassword } = req.body;
+		const { userId, amount, symbol, address, network } = req.body;
 
 		// Validate required fields
 		if (!userId || !amount || !symbol || !address || !network) {
@@ -22,16 +22,6 @@ export const createWithdrawal = async (req: Request, res: Response) => {
 		const user = await User.findById(userId);
 		if (!user) {
 			return res.status(400).json({ message: "User not found." });
-		}
-
-		if (!user.withdrawalPassword) {
-			return res.status(400).json({ message: "Create/Enter withdrawal password." });
-		}
-
-		// Compare withdrawal passwords
-		const isMatch = await bcrypt.compare(withdrawalPassword, user.withdrawalPassword);
-		if (!isMatch) {
-			return res.status(401).json({ message: "Incorrect withdrawal password." });
 		}
 
 		const coin = await Coin.findOne({ symbol });
